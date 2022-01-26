@@ -1,0 +1,6 @@
+ci/*
+example/.dart_tool/*
+example/.idea/*
+example/build/*
+example/embeddedsdk_example.iml
+scripts/*
