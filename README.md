@@ -21,7 +21,7 @@ dependencies:
 and run an implicit `flutter pub get`
 
 ## Usage
-Check out the [documentation](https://docs.beyondidentity.com) for more info.
+Check out the [documentation](https://developer.beyondidentity.com) for more information.
 
 ### Example app
 To run the Android example app

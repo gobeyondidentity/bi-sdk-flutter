@@ -1,13 +1,9 @@
 PODS:
-  - BeyondIdentityCoreSDK (0.5.0)
-  - BeyondIdentityDeviceInfoSDK (0.5.0)
-  - BeyondIdentityEmbedded (0.5.0):
-    - BeyondIdentityCoreSDK (= 0.5.0)
-    - BeyondIdentityDeviceInfoSDK (= 0.5.0)
-    - BeyondIdentityEnclaveSDK (= 0.5.0)
-  - BeyondIdentityEnclaveSDK (0.5.0)
-  - embeddedsdk (0.1.0):
-    - BeyondIdentityEmbedded (= 0.5.0)
+  - BeyondIdentityCoreSDK (0.7.0)
+  - BeyondIdentityEmbedded (0.7.0):
+    - BeyondIdentityCoreSDK (= 0.7.0)
+  - embeddedsdk (0.2.0):
+    - BeyondIdentityEmbedded (= 0.7.0)
     - Flutter
   - Flutter (1.0.0)
   - uni_links (0.0.1):
@@ -21,9 +17,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - BeyondIdentityCoreSDK
-    - BeyondIdentityDeviceInfoSDK
     - BeyondIdentityEmbedded
-    - BeyondIdentityEnclaveSDK
 
 EXTERNAL SOURCES:
   embeddedsdk:
@@ -34,11 +28,9 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/uni_links/ios"
 
 SPEC CHECKSUMS:
-  BeyondIdentityCoreSDK: b66a8810dd753b88795a9c50febaadacbd1e94b1
-  BeyondIdentityDeviceInfoSDK: f6252c6e934733f25f20d105563170dac7484e55
-  BeyondIdentityEmbedded: 20f5c727620c994f69d8e95235fa2445f8236e65
-  BeyondIdentityEnclaveSDK: b26142b0da2b9400bc74ed72bcc93dd988930481
-  embeddedsdk: 4eeeaed8ba2a9193add006bfea3a09be48d9d289
+  BeyondIdentityCoreSDK: ea967b5fe72957401370e3a344152dadead7b479
+  BeyondIdentityEmbedded: cf356be569d9a580b8379d2006e3caa23f5840ad
+  embeddedsdk: 4ff59fb2d0e7aa0db8141aa60264e76e07f8e54d
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   uni_links: d97da20c7701486ba192624d99bffaaffcfc298a
 

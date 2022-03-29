@@ -8,9 +8,9 @@ import android.content.Intent
 import android.util.Log
 import androidx.annotation.NonNull
 import com.beyondidentity.embedded.sdk.EmbeddedSdk
-import com.beyondidentity.embedded.sdk.export.ExportCredentialListener
+import com.beyondidentity.embedded.sdk.extend.ExtendCredentialListener
 import com.beyondidentity.embedded.sdk.models.Credential
-import com.beyondidentity.embedded.sdk.models.ExportResponse
+import com.beyondidentity.embedded.sdk.models.ExtendResponse
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -52,7 +52,7 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
                     (args as? List<String>)?.let { handleList ->
                         EmbeddedSdk.extendCredentials(
                             credentialHandles = handleList,
-                            listener = object : ExportCredentialListener {
+                            listener = object : ExtendCredentialListener {
                                 override fun onError(throwable: Throwable) {
                                     val updateMap = mapOf(
                                         ExtendCredentialsStatus.STATUS to ExtendCredentialsStatus.ERROR,
@@ -66,7 +66,7 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
                                     events?.success(updateMap)
                                 }
 
-                                override fun onUpdate(token: ExportResponse?) {
+                                override fun onUpdate(token: ExtendResponse?) {
                                     val updateMap = mapOf(
                                         ExtendCredentialsStatus.STATUS to ExtendCredentialsStatus.UPDATE,
                                         "token" to token?.rendezvousToken
@@ -278,6 +278,7 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
         "enrollURI" to credential.enrollUri,
         "rootFingerprint" to credential.rootFingerprint,
         "chain" to credential.chain,
+        "state" to credential.state.toString(),
     )
 
     companion object {

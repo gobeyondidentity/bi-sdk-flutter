@@ -198,14 +198,15 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
     private func makeCredentialDictionary(_ credential: Credential) -> [String: Any?] {
         return [
             "created": credential.created,
-            "handle": credential.handle.value,
+            "handle": credential.handle?.value,
             "keyHandle": credential.keyHandle,
             "name": credential.name,
             "logoURL": credential.logoURL,
             "loginURI": credential.loginURI,
             "enrollURI": credential.enrollURI,
             "chain": credential.chain,
-            "rootFingerprint": credential.rootFingerprint
+            "rootFingerprint": credential.rootFingerprint,
+            "state": credential.state.rawValue
         ]
     }
 }

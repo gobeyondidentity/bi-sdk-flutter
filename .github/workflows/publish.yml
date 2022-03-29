@@ -6,9 +6,8 @@ on:
       - '*'
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v1
       - name: Install Flutter
@@ -27,7 +26,5 @@ jobs:
           PUB_DEV_PUBLISH_EXPIRATION: ${{ secrets.PUB_DEV_PUBLISH_EXPIRATION }}
         run: |
           sh ./tool/pubdev_config/pub_dev_login.sh
-      - name: Check Publish Warnings
-        run: flutter pub publish --dry-run
       - name: Publish Package
         run: flutter pub publish -f
