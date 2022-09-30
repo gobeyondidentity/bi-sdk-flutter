@@ -8,10 +8,9 @@ import android.content.Intent
 import android.util.Log
 import androidx.annotation.NonNull
 import com.beyondidentity.embedded.sdk.EmbeddedSdk
-import com.beyondidentity.embedded.sdk.extend.ExtendCredentialListener
+import com.beyondidentity.embedded.sdk.models.AuthenticateResponse
+import com.beyondidentity.embedded.sdk.models.BindCredentialResponse
 import com.beyondidentity.embedded.sdk.models.Credential
-import com.beyondidentity.embedded.sdk.models.ExtendResponse
-
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -24,17 +23,14 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 
 /** EmbeddedsdkPlugin */
-class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, PluginRegistry.ActivityResultListener {
+class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
+    PluginRegistry.ActivityResultListener {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
-    private lateinit var eventChannel: EventChannel
     private var isEmbeddedSdkInitialized = false
-
-    private var clientId: String? = null
-    private var redirectUri: String? = null
 
     private var keyguardPrompt: (((Boolean, Exception) -> Unit) -> Unit)? = null
     private var currentActivity: Activity? = null
@@ -44,47 +40,6 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, EMBEDDED_METHOD_CHANNEL)
         channel.setMethodCallHandler(this)
-
-        eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, EMBEDDED_EXPORT_EVENT_CHANNEL)
-        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
-            override fun onListen(arguments: Any?, events: EventSink?) {
-                arguments?.let { args ->
-                    (args as? List<String>)?.let { handleList ->
-                        EmbeddedSdk.extendCredentials(
-                            credentialHandles = handleList,
-                            listener = object : ExtendCredentialListener {
-                                override fun onError(throwable: Throwable) {
-                                    val updateMap = mapOf(
-                                        ExtendCredentialsStatus.STATUS to ExtendCredentialsStatus.ERROR,
-                                        "errorMessage" to throwable.localizedMessage
-                                    )
-                                    events?.success(updateMap)
-                                }
-
-                                override fun onFinish() {
-                                    val updateMap = mapOf(ExtendCredentialsStatus.STATUS to ExtendCredentialsStatus.FINISH)
-                                    events?.success(updateMap)
-                                }
-
-                                override fun onUpdate(token: ExtendResponse?) {
-                                    val updateMap = mapOf(
-                                        ExtendCredentialsStatus.STATUS to ExtendCredentialsStatus.UPDATE,
-                                        "token" to token?.rendezvousToken
-                                    )
-                                    events?.success(updateMap)
-                                }
-
-                            }
-                        )
-                    } ?: events?.error(EMBEDDED_SDK_ERROR, "No args passed for credential extend", null)
-                } ?: events?.error(EMBEDDED_SDK_ERROR, "No args passed for credential extend", null)
-            }
-
-            override fun onCancel(arguments: Any?) {
-                EmbeddedSdk.cancelExtendCredentials { }
-            }
-
-        })
 
         keyguardPrompt = { answer ->
             (flutterPluginBinding.applicationContext.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager)
@@ -102,130 +57,130 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
             when (call.method) {
                 "initialize" -> {
                     val app: Application? = currentActivity?.application
-                    val clientId: String? = call.argument("clientId")
+                    val allowedDomains: List<String>? = call.argument("allowedDomains")
                     val biometricPrompt: String? = call.argument("biometricPrompt")
-                    val redirectUri: String? = call.argument("redirectUri")
                     call.argument<Boolean>("enableLogging")?.let {
-                        if(it) {
+                        if (it) {
                             this.logger = { log -> Log.d("FlutterEmbedded", log) }
                         }
                     }
 
-                    this.clientId = clientId
-                    this.redirectUri = redirectUri
-                    checkNulls(app, this.clientId, biometricPrompt)?.let { (app, clientId, biometricPrompt) ->
+                    checkNulls(app, biometricPrompt)?.let { (app, biometricPrompt) ->
                         EmbeddedSdk.init(
                             app = app as Application,
                             keyguardPrompt = keyguardPrompt,
                             logger = this.logger,
-                            clientId = clientId as String,
                             biometricAskPrompt = biometricPrompt as String,
+                            allowedDomains = allowedDomains,
                         )
                         isEmbeddedSdkInitialized = true
                     } ?: result.error(EMBEDDED_SDK_ERROR, "Failed to initialize EmbeddedSdk", null)
                 }
-                "createPkce" -> {
-                    EmbeddedSdk.createPkce { resultPkce ->
-                        resultPkce.onSuccess { pkce ->
-                            result.success(
-                                mapOf(
-                                    "codeVerifier" to pkce.codeVerifier,
-                                    "codeChallenge" to pkce.codeChallenge,
-                                    "codeChallengeMethod" to pkce.codeChallengeMethod
+                "bindCredential" -> {
+                    call.argument<String>("url")?.let { url ->
+                        EmbeddedSdk.bindCredential(url) { bindCredentialResult ->
+                            bindCredentialResult.onSuccess { bindCredentialResponse ->
+                                result.success(
+                                    makeBindCredentialMap(
+                                        bindCredentialResponse
+                                    )
                                 )
-                            )
+                            }
+                            bindCredentialResult.onFailure {
+                                result.error(
+                                    EMBEDDED_SDK_ERROR,
+                                    it.localizedMessage,
+                                    null
+                                )
+                            }
                         }
-                        resultPkce.onFailure { t ->
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get bindCredential arguments",
+                        null
+                    )
+                }
+                "authenticate" -> {
+                    call.argument<String>("url")?.let { url ->
+                        EmbeddedSdk.authenticate(
+                            url,
+                            call.argument<String>("credentialId") ?: "",
+                        ) { authenticateResult ->
+                            authenticateResult.onSuccess { authenticateResponse ->
+                                result.success(
+                                    makeAuthenticateMap(
+                                        authenticateResponse
+                                    )
+                                )
+                            }
+                            authenticateResult.onFailure {
+                                result.error(
+                                    EMBEDDED_SDK_ERROR,
+                                    it.localizedMessage,
+                                    null
+                                )
+                            }
+                        }
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get authenticate arguments",
+                        null
+                    )
+                }
+                "getCredentials" -> {
+                    EmbeddedSdk.getCredentials { getCredentialsResult ->
+                        getCredentialsResult.onSuccess { credentials ->
+                            result.success(credentials.map { credential ->
+                                makeCredentialMap(
+                                    credential
+                                )
+                            })
+                        }
+                        // TODO standardize error messaging between iOS and Android
+                        getCredentialsResult.onFailure {
                             result.error(
                                 EMBEDDED_SDK_ERROR,
-                                t.localizedMessage,
+                                it.localizedMessage,
                                 null
                             )
                         }
                     }
                 }
-                "registerCredentialsWithUrl" -> {
-                    call.argument<String>("registerUri")?.let { uri ->
-                        EmbeddedSdk.registerCredentialsWithUrl(uri) { credResult ->
-                            credResult.onSuccess { cred -> result.success(makeCredentialMap(cred)) }
-                            credResult.onFailure { result.error(EMBEDDED_SDK_ERROR, it.localizedMessage, null) }
-                        }
-                    } ?: result.error(EMBEDDED_SDK_ERROR, "Could not get registerCredentialsWithUrl arguments", null)
-                }
-                "getCredentials" -> {
-                    EmbeddedSdk.getCredentials { credResult ->
-                        credResult.onSuccess { credList -> result.success(credList.map { cred -> makeCredentialMap(cred) }) }
-                        // TODO standardize error messaging between iOS and Android
-                        credResult.onFailure { result.error(EMBEDDED_SDK_ERROR, it.localizedMessage, null) }
-                    }
-                }
-
                 "deleteCredential" -> {
-                    call.argument<String>("handle")?.let { handle ->
-                        EmbeddedSdk.deleteCredential(handle) { deleteCredResult ->
-                            deleteCredResult.onSuccess { result.success(handle) }
-                            deleteCredResult.onFailure { result.error(EMBEDDED_SDK_ERROR, it.localizedMessage, null) }
-                        }
-                    } ?: result.error(EMBEDDED_SDK_ERROR, "Could not get deleteCredential arguments", null)
-                }
-
-                "authorize" -> {
-                    val scope = call.argument<String>("scope")
-                    val pkceS256CodeChallenge = call.argument<String>("pkceS256CodeChallenge")
-
-                    checkNulls(this.clientId, this.redirectUri, scope)?.let { (clientId, redirectUri, scope) ->
-                        EmbeddedSdk.authorize(
-                            clientId = clientId,
-                            redirectUri = redirectUri,
-                            pkceS256CodeChallenge = pkceS256CodeChallenge,
-                            scope = scope,
-                        ) { credResult ->
-                            credResult.onSuccess { result.success(it) }
-                            credResult.onFailure { t ->
+                    call.argument<String>("credentialId")?.let { id ->
+                        EmbeddedSdk.deleteCredential(id) { deleteCredentialResult ->
+                            deleteCredentialResult.onSuccess { result.success(id) }
+                            deleteCredentialResult.onFailure {
                                 result.error(
-                                    "EmbeddedError",
-                                    t.localizedMessage,
+                                    EMBEDDED_SDK_ERROR,
+                                    it.localizedMessage,
                                     null
                                 )
                             }
                         }
-                    } ?: result.error(EMBEDDED_SDK_ERROR, "Could not get authorize arguments", null)
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get deleteCredential arguments",
+                        null
+                    )
                 }
-                "authenticate" -> {
-                    checkNulls(this.clientId, this.redirectUri)?.let { (cid, rUri) ->
-                        EmbeddedSdk.authenticate(
-                            clientId = cid,
-                            redirectUri = rUri,
-                        ) { credResult ->
-                            credResult.onSuccess {
-                                result.success(
-                                    mapOf(
-                                        "accessToken" to it.accessToken,
-                                        "idToken" to it.idToken,
-                                        "tokenType" to it.tokenType,
-                                        "expiresIn" to it.expiresIn,
-                                    )
-                                )
-                            }
-                            credResult.onFailure { t -> result.error(EMBEDDED_SDK_ERROR, t.localizedMessage, null) }
-                        }
-                    } ?: result.error(EMBEDDED_SDK_ERROR, "Could not get authenticate arguments", null)
+                "isBindCredentialUrl" -> {
+                    call.argument<String>("url")?.let { url ->
+                        result.success(EmbeddedSdk.isBindCredentialUrl(url))
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get isBindCredentialUrl arguments",
+                        null
+                    )
                 }
-                "registerCredentialsWithToken" -> {
-                    call.argument<String>("token")?.let { token ->
-                        EmbeddedSdk.registerCredentialsWithToken(
-                            token = token,
-                        ) { credResult ->
-                            credResult.onSuccess { result.success(it.map { cred -> makeCredentialMap(cred) }) }
-                            credResult.onFailure { result.error(EMBEDDED_SDK_ERROR, it.localizedMessage, null) }
-                        }
-                    } ?: result.error(EMBEDDED_SDK_ERROR, "Could not get registerCredentials arguments", null)
-                }
-                "cancelExtendCredentials" -> {
-                    EmbeddedSdk.cancelExtendCredentials {
-                        it.onSuccess { result.success("Extend credentials cancelled") }
-                        it.onFailure { result.error(EMBEDDED_SDK_ERROR, "Error cancelling extend credentials", null) }
-                    }
+                "isAuthenticateUrl" -> {
+                    call.argument<String>("url")?.let { url ->
+                        result.success(EmbeddedSdk.isAuthenticateUrl(url))
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get isAuthenticateUrl arguments",
+                        null
+                    )
                 }
                 else -> {
                     result.notImplemented()
@@ -236,7 +191,6 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
-        eventChannel.setStreamHandler(null)
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -268,17 +222,44 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
         return true
     }
 
+    private fun makeAuthenticateMap(authenticateResponse: AuthenticateResponse) = mapOf(
+        "redirectUrl" to authenticateResponse.redirectUrl,
+        "message" to authenticateResponse.message,
+    )
+
+    private fun makeBindCredentialMap(bindCredentialResponse: BindCredentialResponse) = mapOf(
+        "credential" to makeCredentialMap(bindCredentialResponse.credential),
+        "postBindingRedirectUri" to bindCredentialResponse.postBindingRedirectUri,
+    )
+
     private fun makeCredentialMap(credential: Credential) = mapOf(
-        "created" to credential.created,
-        "handle" to credential.handle,
+        "id" to credential.id,
+        "localCreated" to credential.localCreated.toString(),
+        "localUpdated" to credential.localUpdated.toString(),
+        "apiBaseUrl" to credential.apiBaseURL.toString(),
+        "tenantId" to credential.tenantId,
+        "realmId" to credential.realmId,
+        "identityId" to credential.identityId,
         "keyHandle" to credential.keyHandle,
-        "name" to credential.name,
-        "logoURL" to credential.imageUrl,
-        "loginURI" to credential.loginUri,
-        "enrollURI" to credential.enrollUri,
-        "rootFingerprint" to credential.rootFingerprint,
-        "chain" to credential.chain,
         "state" to credential.state.toString(),
+        "created" to credential.created.toString(),
+        "updated" to credential.updated.toString(),
+        "tenant" to mapOf(
+            "displayName" to credential.tenant.displayName,
+        ),
+        "realm" to mapOf(
+            "displayName" to credential.realm.displayName,
+        ),
+        "identity" to mapOf(
+            "displayName" to credential.identity.displayName,
+            "username" to credential.identity.username,
+            "primaryEmailAddress" to credential.identity.primaryEmailAddress,
+        ),
+        "theme" to mapOf(
+            "logoLightUrl" to credential.theme.logoUrlLight.toString(),
+            "logoDarkUrl" to credential.theme.logoUrlDark.toString(),
+            "supportUrl" to credential.theme.supportUrl.toString(),
+        )
     )
 
     companion object {
@@ -289,13 +270,6 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
 
         const val EMBEDDED_SDK_ERROR = "FlutterEmbeddedSdkError"
     }
-}
-
-private object ExtendCredentialsStatus {
-    const val STATUS = "status"
-    const val UPDATE = "update"
-    const val FINISH = "finish"
-    const val ERROR = "error"
 }
 
 fun <T : Any> checkNulls(vararg elements: T?): Array<T>? {

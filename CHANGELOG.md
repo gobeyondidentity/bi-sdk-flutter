@@ -1,8 +1,9 @@
-## 0.1.0
+# Changelog
+All notable changes to this project will be documented in this file.
 
-* Initial release of the Beyond Identity Embedded SDK
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### 0.2.0
-
-* Add `state` field to `Credential`
-* Fixes
+## [1.0.0] - 2022-09-21
+### Changed
+- Updated the Flutter SDK to support our newly released Secure Customer product. See the [documentation](https://developer.beyondidentity.com/docs/v1/sdks/flutter-sdk/overview) for more details.

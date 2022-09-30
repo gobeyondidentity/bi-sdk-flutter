@@ -1,6 +1,6 @@
 # embeddedsdk_example
 
-Demonstrates how to use the embeddedsdk plugin.
+Demonstrates how to use the bi_sdk_flutter plugin.
 
 ## Getting Started
 

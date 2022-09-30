@@ -1,27 +1,28 @@
-import 'package:embeddedsdk/embeddedsdk.dart';
+import 'package:bi_sdk_flutter/embeddedsdk.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const MethodChannel channel = MethodChannel('embeddedsdk_method_channel');
 
+  // ignore: constant_identifier_names
+  const String TEST_AUTHENTICATE_URL =
+      "https://auth-us.beyondidentity.com/bi-authenticate?request=0123456789ABCDEF";
+  // ignore: constant_identifier_names
+  const String TEST_BIND_CREDENTIAL_URL =
+      "https://auth-us.beyondidentity.com/v1/tenants/0123456789ABCDEF/realms/0123456789ABCDEF/identities/0123456789ABCDEF/credential-binding-jobs/0123456789ABCDEF:invokeAuthenticator?token=0123456789ABCDEF";
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
     channel.setMockMethodCallHandler((MethodCall methodCall) async {
       switch (methodCall.method) {
-        case 'authorize':
-          return 'authz_code_123';
-        case 'createPkce':
-          return {
-            "codeVerifier": "123",
-            "codeChallenge": "321",
-            "codeChallengeMethod": "S256",
-          };
         case 'getCredentials':
-          return [
-            createCredentail()
-          ];
+          return [createCredential()];
+        case 'isBindCredentialUrl':
+          return methodCall.arguments['url'] == TEST_BIND_CREDENTIAL_URL;
+        case 'isAuthenticateUrl':
+          return methodCall.arguments['url'] == TEST_AUTHENTICATE_URL;
       }
     });
   });
@@ -30,34 +31,87 @@ void main() {
     channel.setMockMethodCallHandler(null);
   });
 
-  test('getAuthorizationCode', () async {
-    expect(await Embeddedsdk.authorize("scope", null), 'authz_code_123');
-  });
-
-  test('getPkce', () async {
-    PKCE pkce = await Embeddedsdk.createPkce();
-    expect(pkce.codeChallenge, "321");
-  });
-
   test('getCredentials', () async {
     List<Credential> credentials = await Embeddedsdk.getCredentials();
-    expect(credentials[0].handle, "handle_123");
-    expect(credentials[0].chain[0], "chain_1");
-    expect(credentials[0].loginURI, null);
-    expect(credentials[0].enrollURI, null);
+    expect(credentials[0].id, "01234567-89AB-CDEF-0123-456789ABCDEF");
+    expect(credentials[0].localCreated, "2022-06-15T12:00:00");
+    expect(credentials[0].localUpdated, "2022-06-15T12:00:00");
+    expect(credentials[0].apiBaseURL, "https://auth-us.beyondidentity.com");
+    expect(credentials[0].tenantId, "0123456789ABCDEF");
+    expect(credentials[0].realmId, "0123456789ABCDEF");
+    expect(credentials[0].identityId, "0123456789ABCDEF");
+    expect(credentials[0].keyHandle, "km:0123456789ABCDEF");
+    expect(credentials[0].state, CredentialState.ACTIVE);
+    expect(credentials[0].created, "2022-06-15T12:00:00");
+    expect(credentials[0].updated, "2022-06-15T12:00:00");
+    expect(credentials[0].tenant.displayName, "Beyond Identity");
+    expect(credentials[0].realm.displayName, "Beyond Identity");
+    expect(credentials[0].identity.displayName, "Beyond Identity");
+    expect(credentials[0].identity.username, "Beyond Identity");
+    expect(credentials[0].identity.primaryEmailAddress, "foo.bar@beyondidentity.com");
+    expect(credentials[0].theme.logoUrlLight,
+        "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png");
+    expect(credentials[0].theme.logoUrlDark,
+        "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png");
+    expect(credentials[0].theme.supportUrl,
+        "https://www.beyondidentity.com/support");
+  });
+
+  test('isBindCredentialUrlFailure', () async {
+    bool isBindCredentialUrl =
+        await Embeddedsdk.isBindCredentialUrl(TEST_AUTHENTICATE_URL);
+    expect(isBindCredentialUrl, false);
+  });
+
+  test('isBindCredentialUrlSuccess', () async {
+    bool isBindCredentialUrl =
+        await Embeddedsdk.isBindCredentialUrl(TEST_BIND_CREDENTIAL_URL);
+    expect(isBindCredentialUrl, true);
+  });
+
+  test('isAuthenticateUrlFailure', () async {
+    bool isAuthenticateUrl =
+        await Embeddedsdk.isAuthenticateUrl(TEST_BIND_CREDENTIAL_URL);
+    expect(isAuthenticateUrl, false);
+  });
+
+  test('isAuthenticateUrlSuccess', () async {
+    bool isAuthenticateUrl =
+        await Embeddedsdk.isAuthenticateUrl(TEST_AUTHENTICATE_URL);
+    expect(isAuthenticateUrl, true);
   });
 }
 
-Map<String, dynamic> createCredentail() {
+Map<String, dynamic> createCredential() {
   return {
-    "created": "123",
-    "handle": "handle_123",
-    "keyHandle": "key_handle_123",
-    "name": "name_123",
-    "logoURL": "name_123",
-    "loginURI": null,
-    "enrollURI": null,
-    "chain": ["chain_1"],
-    "rootFingerprint": "name_123",
+    "id": "01234567-89AB-CDEF-0123-456789ABCDEF",
+    "localCreated": "2022-06-15T12:00:00",
+    "localUpdated": "2022-06-15T12:00:00",
+    "apiBaseUrl": "https://auth-us.beyondidentity.com",
+    "tenantId": "0123456789ABCDEF",
+    "realmId": "0123456789ABCDEF",
+    "identityId": "0123456789ABCDEF",
+    "keyHandle": "km:0123456789ABCDEF",
+    "state": "Active",
+    "created": "2022-06-15T12:00:00",
+    "updated": "2022-06-15T12:00:00",
+    "tenant": {
+      "displayName": "Beyond Identity",
+    },
+    "realm": {
+      "displayName": "Beyond Identity",
+    },
+    "identity": {
+      "displayName": "Beyond Identity",
+      "username": "Beyond Identity",
+      "primaryEmailAddress": "foo.bar@beyondidentity.com",
+    },
+    "theme": {
+      "logoLightUrl":
+          "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png",
+      "logoDarkUrl":
+          "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png",
+      "supportUrl": "https://www.beyondidentity.com/support",
+    },
   };
 }

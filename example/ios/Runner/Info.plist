@@ -66,5 +66,7 @@
 	<string>$(XCCONFIG_APP_BUILD_NUMBER)</string>
 	<key>XCCONFIG_APP_VERSION</key>
 	<string>$(XCCONFIG_APP_VERSION)</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 </dict>
 </plist>

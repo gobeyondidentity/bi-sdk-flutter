@@ -1,6 +1,12 @@
 // THIS FILE IS GENERATED. DO NOT EDIT.
 
 class BuildConfig {
+  // SDK Version
+  static const SDK_VERSION = "1.0.0";
+
+  // Environment
+  static const ENVIRONMENT = "production";
+
   // Client ID for the confidential client flow
   static const CONFIDENTIAL_CLIENT_ID = "597c0a3c510b2afae53dc155d18933b5";
 

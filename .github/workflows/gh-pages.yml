@@ -1,0 +1,38 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Build & Publish DartDoc
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.0.5'
+          channel: 'stable'
+
+      - run: flutter pub get
+
+      - name: Build DartDoc
+        run: dart doc
+
+      - name: Publish DartDoc
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: doc/api

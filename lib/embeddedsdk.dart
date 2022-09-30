@@ -3,199 +3,82 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 class Embeddedsdk {
-  static const MethodChannel _channel = MethodChannel('embeddedsdk_method_channel');
-  static const EventChannel _eventChannel = EventChannel('embeddedsdk_export_event_channel');
+  static const MethodChannel _channel =
+      MethodChannel('embeddedsdk_method_channel');
+  static const EventChannel _eventChannel =
+      EventChannel('embeddedsdk_export_event_channel');
   static Function(Map<String, String?>)? _exportCallback;
   static StreamSubscription<dynamic>? _exportSubscription;
 
   /// Initialize and configure the Beyond Identity Embedded SDK.
   ///
-  /// [clientId] is the public or confidential client ID generated during the OIDC configuration.
+  /// [allowedDomains] Optional array of domains that we whitelist against for network operations.
+  /// This will default to Beyond Identity's allowed domains.
   /// [biometricPrompt] is the prompt the user will see when asked for biometrics while
   /// extending a credential to another device.
-  /// [redirectUri] is the URI where the user will be redirected after the authorization
-  /// has completed. The redirect URI must be one of the URIs passed in the OIDC configuration.
   /// [enableLogging] enables logging if set to `true`.
-  static Future<void> initialize(
-      String clientId, String biometricPrompt, String redirectUri, bool enableLogging) async {
+  static Future<void> initialize(String biometricPrompt, bool enableLogging,
+      {List<String>? allowedDomains = const <String>[]}) async {
     await _channel.invokeMethod("initialize", {
-      'clientId': clientId,
+      'allowedDomains': allowedDomains,
       'biometricPrompt': biometricPrompt,
-      'redirectUri': redirectUri,
-      'enableLogging': enableLogging
+      'enableLogging': enableLogging,
     });
   }
 
-  /// Use a registration link to create and register a credential.
+  /// Bind a credential to this device.
   ///
-  /// [registerUri] is the URI used to create a credential.
-  /// Returns the `Credential` that was created and registered with Beyond Identity.
-  static Future<Credential> registerCredentialsWithUrl(String registerUri) async {
-    final Map<String, dynamic>? credentialMap = await _channel.invokeMapMethod('registerCredentialsWithUrl', {
-      'registerUri': registerUri,
-    });
-
-    if (credentialMap != null) {
-      try {
-        return Credential.mapToCredential(credentialMap);
-      } on Exception {
-        rethrow;
-      }
-    } else {
-      throw Exception("Error getting values from platform for registerCredentialsWithUrl");
-    }
-  }
-
-  /// Extend a list of credentials from one device to another.
-  ///
-  /// The user must be in an authenticated state to extend any credentials.
-  /// During this flow the user is prompted for a biometric challenge. If
-  /// biometrics are not set, it falls back to PIN.
-  ///
-  /// After the challenge is completed, a rendezvous token is provided with
-  /// 90 seconds time-to-live, after which a new token is generated.
-  ///
-  /// NOTE: to cancel the credentials flow, [cancelExtendCredentials]
-  /// must be invoked.
-  ///
-  /// [credentialHandles] is the list of credential handles to extend.
-  /// [exportCallback] is a callback that receives status updates during the
-  /// execution of the flow. Its argument is a map with the following contents:
-  ///
-  /// * "status": one of constant values in the [ExtendCredentialsStatus] class.
-  /// * "token": only present if status is "update". Contains the new rendezvous
-  ///   token value.
-  /// * "errorMessage": only present if status is "error". Contains the error
-  ///   message.
-  static void extendCredentials(List<String> credentialHandles, Function(Map<String, String?>) exportCallback) {
-    _exportCallback = exportCallback;
-
-    _exportSubscription = _eventChannel.receiveBroadcastStream(credentialHandles).listen((event) {
-      if (_exportCallback != null) {
-        _exportCallback!(event.cast<String, String?>());
-      }
-    });
-  }
-
-  /// Cancels ongoing extend requests.
-  static Future<void> cancelExtendCredentials() async {
-    _exportSubscription!.cancel();
-    await _channel.invokeMethod('cancelExtendCredentials');
-  }
-
-  /// Delete a [Credential] by handle.
-  ///
-  /// Warning: deleting a [Credential] is destructive and will remove everything
-  /// from the device. If no other device contains the credential then the user
-  /// will need to complete a recovery in order to log in again on this device.
-  ///
-  /// [handle] is the credential handle uniquely identifying the [Credential] to
-  /// delete.
-  static Future<String> deleteCredential(String handle) async {
-    final String handleResult = await _channel.invokeMethod('deleteCredential', {
-      'handle': handle,
-    });
-    return handleResult;
-  }
-
-  /// Register a [Credential] with a rendezvous token.
-  ///
-  /// Use this function to register a [Credential] from one device to another.
-  /// NOTE: only one credential per device is currently supported.
-  ///
-  /// [token] is a rendezvous token received during the export flow initiated
-  /// by calling [extendCredentials].
-  ///
-  /// Returns the list of credentials registered.
-  static Future<List<Credential>> registerCredentialsWithToken(String token) async {
-    List<dynamic>? credentialListMap = await _channel.invokeListMethod('registerCredentialsWithToken', {
-      'token': token,
-    });
-    List<Credential> credentialList = List.empty(growable: true);
-
-    if (credentialListMap != null) {
-      try {
-        credentialList = credentialListMap.map((cred) => Credential.mapToCredential(cred)).toList();
-      } on Exception {
-        rethrow;
-      }
-    } else {
-      throw Exception("Error getting credentials from platform");
-    }
-
-    return credentialList;
-  }
-
-  /// Initiate authentication via the OIDC authorization code flow for confidential clients.
-  ///
-  /// An app implementing the Embedded SDK initiates an authentication request
-  /// with Beyond Identity. Using the confidential client API assumes that a secure
-  /// backend exists that can safely store the client secret and can exchange
-  /// the authorization code for an access and ID token.
-  ///
-  /// [scope] is the OIDC scope used during authentication. Only "openid" is
-  /// currently supported.
-  /// [pkceS256CodeChallenge] is an optional, but recommended PKCE challenge
-  /// used to prevent authorization code injection that can be obtained by
-  /// invoking [createPkce].
-  ///
-  /// Returns the authorization code that can be used to redeem tokens from
-  /// the Beyond Identity token endpoint.
-  static Future<String> authorize(String scope, String? pkceS256CodeChallenge) async {
-    final String authorizationCode = await _channel.invokeMethod('authorize', {
-      'scope': scope,
-      'pkceS256CodeChallenge': pkceS256CodeChallenge,
-    });
-    return authorizationCode;
-  }
-
-  /// Initiate authentication via the OIDC authorization code flow for public clients.
-  ///
-  /// An app implementing the Embedded SDK initiates an authentication request
-  /// with Beyond Identity. Using the public client API assumes that there is
-  /// no secure backend storing the client secret for the app.
-  ///
-  /// Returns the access and ID tokens, plus expiration times in a [TokenResponse]
-  /// object.
-  static Future<TokenResponse> authenticate() async {
-    final Map<String, dynamic>? tokenMap = await _channel.invokeMapMethod('authenticate');
+  /// [url] URL used to bind a credential to this device
+  /// Returns a [BindCredentialResponse] or throws an [Exception]
+  static Future<BindCredentialResponse> bindCredential(String url) async {
+    final Map<String, dynamic>? bindCredentialResponse =
+        await _channel.invokeMapMethod('bindCredential', {'url': url});
 
     try {
-      return TokenResponse(
-        accessToken: tokenMap?["accessToken"],
-        idToken: tokenMap?["idToken"],
-        tokenType: tokenMap?["tokenType"],
-        expiresIn: tokenMap?["expiresIn"],
+      return BindCredentialResponse(
+        credential: Credential.mapToCredential(bindCredentialResponse?["credential"]),
+        postBindingRedirectUri: bindCredentialResponse?["postBindingRedirectUri"],
       );
     } on Exception {
       rethrow;
     }
   }
 
-  /// Creates PKCE authentication request parameters.
+  /// Authenticate a user.
   ///
-  /// For more information on PKCE see https://datatracker.ietf.org/doc/html/rfc7636.
-  ///
-  /// Returns a set of new parameters in a [PKCE] object.
-  static Future<PKCE> createPkce() async {
-    final Map<String, dynamic>? pkceMap = await _channel.invokeMapMethod("createPkce");
-    return PKCE(
-      codeVerifier: pkceMap?["codeVerifier"],
-      codeChallenge: pkceMap?["codeChallenge"],
-      codeChallengeMethod: pkceMap?["codeChallengeMethod"],
-    );
+  /// [url] URL used to authenticate
+  /// [credentialId] The ID of the credential with which to authenticate.
+  /// Returns a [AuthenticateResponse] or throws an [Exception]
+  static Future<AuthenticateResponse> authenticate(String url, String credentialId) async {
+    final Map<String, dynamic>? authenticateResponse =
+        await _channel.invokeMapMethod('authenticate', {
+      'url': url,
+      'credentialId': credentialId,
+    });
+
+    try {
+      return AuthenticateResponse(
+        redirectUrl: authenticateResponse?["redirectUrl"],
+        message: authenticateResponse?["message"],
+      );
+    } on Exception {
+      rethrow;
+    }
   }
 
   /// Get all current credentials for this device.
   ///
-  /// NOTE: only one credential per device is supported currently.
+  /// Returns a [List] of [Credential]s
   static Future<List<Credential>> getCredentials() async {
-    List<dynamic>? credentialListMap = await _channel.invokeListMethod("getCredentials");
+    List<dynamic>? credentialListMap =
+        await _channel.invokeListMethod("getCredentials");
     List<Credential> credentialList = List.empty(growable: true);
 
     if (credentialListMap != null) {
       try {
-        credentialList = credentialListMap.map((cred) => Credential.mapToCredential(cred)).toList();
+        credentialList = credentialListMap
+            .map((cred) => Credential.mapToCredential(cred))
+            .toList();
       } on Exception {
         rethrow;
       }
@@ -205,163 +88,349 @@ class Embeddedsdk {
 
     return credentialList;
   }
+
+  /// Delete a [Credential] by ID on current device.
+  ///
+  /// Warning: deleting a [Credential] is destructive and will remove everything
+  /// from the device. If no other device contains the credential then the user
+  /// will need to complete a recovery in order to log in again on this device.
+  ///
+  /// [id] is the credential id, uniquely identifying a [Credential].
+  static Future<void> deleteCredential(String id) async {
+    await _channel.invokeMethod('deleteCredential', {
+      'credentialId': id,
+    });
+  }
+
+  /// Returns whether a Url is a valid Bind Credential Url or not.
+  ///
+  /// [url] A Url String
+  static Future<bool> isBindCredentialUrl(String url) async {
+    try {
+      return await _channel.invokeMethod('isBindCredentialUrl', {'url': url});
+    } on Exception {
+      rethrow;
+    }
+  }
+
+  /// Returns whether a Url is a valid Authenticate Url or not.
+  ///
+  /// [url] A Url String
+  static Future<bool> isAuthenticateUrl(String url) async {
+    try {
+      return await _channel.invokeMethod('isAuthenticateUrl', {'url': url});
+    } on Exception {
+      rethrow;
+    }
+  }
 }
 
-/// Represent PKCE authorization request parameters.
-class PKCE {
-  /// A cryptographically random string.
-  String codeVerifier;
-  /// A challenge derived from the code verifier.
-  String codeChallenge;
-  /// A method that was used to derive code challenge.
-  String codeChallengeMethod;
+/// A response returned after successfully binding a credential to a device.
+class BindCredentialResponse {
+  /// The [Credential] bound to the device.
+  Credential credential;
 
-  PKCE({required this.codeVerifier, required this.codeChallenge, required this.codeChallengeMethod});
+  /// A URI that can be redirected to once a credential is bound. This could be a URI that automatically logs the user in with the newly bound credential, or a success page indicating that a credential has been bound.
+  String postBindingRedirectUri;
+
+  BindCredentialResponse({
+    required this.credential,
+    required this.postBindingRedirectUri,
+  });
+
+  String toJson() {
+    return "{"
+        "\"credential\":${credential.toJson()},"
+        "\"postBindingRedirectUri\":\"$postBindingRedirectUri\"}";
+  }
 
   @override
   String toString() {
-    return "PKCE = ["
-        "codeVerifier = $codeVerifier, "
-        "codeChallenge = $codeChallenge, "
-        "codeChallengeMethod = $codeChallengeMethod]";
+    return "{\"BindCredentialResponse\":${toJson()}}";
   }
 }
 
 /// Represent User's credential, wrapper for X.509 Certificate
 class Credential {
-  /// The date the [Credential] was created.
-  String created;
-  /// The handle for the `Credential`.
-  String handle;
-  /// The keystore key handle.
+  /// The Globally unique ID of this Credential.
+  String id;
+
+  /// The time when this credential was created locally. This could be different from "created" which is the time when this credential was created on the server.
+  String localCreated;
+
+  /// The last time when this credential was updated locally. This could be different from "updated" which is the last time when this credential was updated on the server.
+  String localUpdated;
+
+  /// The base url for all binding & auth requests
+  String apiBaseURL;
+
+  /// The Identity's Tenant.
+  String tenantId;
+
+  /// The Identity's Realm.
+  String realmId;
+
+  /// The Identity that owns this Credential.
+  String identityId;
+
+  /// Associated key handle.
   String keyHandle;
-  /// The display name of the `Credential`.
-  String name;
-  /// The uri of your company or app's logo.
-  String logoURL;
-  /// The uri of your app's sign in screen. This is where the user would authenticate into your app.
-  String? loginURI;
-  /// The uri of your app's sign up screen. This is where the user would register with your service.
-  String? enrollURI;
-  /// The certificate chain of the [Credential].
-  List chain;
-  /// The SHA256 hash of the root certificate as a base64 encoded string.
-  String rootFingerprint;
-  /// Current state of the [Credential]
+
+  /// The current state of this credential
   CredentialState state;
 
-  Credential(
-      {required this.created,
-      required this.handle,
-      required this.keyHandle,
-      required this.name,
-      required this.logoURL,
-      required this.loginURI,
-      required this.enrollURI,
-      required this.chain,
-      required this.rootFingerprint,
-      required this.state});
+  /// The time this credential was created.
+  String created;
+
+  /// The last time this credential was updated.
+  String updated;
+
+  /// Tenant information associated with this credential.
+  Tenant tenant;
+
+  /// Realm information associated with this credential.
+  Realm realm;
+
+  /// Identity information associated with this credential.
+  Identity identity;
+
+  /// Theme information associated with this credential
+  Theme theme;
+
+  Credential({
+    required this.id,
+    required this.localCreated,
+    required this.localUpdated,
+    required this.apiBaseURL,
+    required this.tenantId,
+    required this.realmId,
+    required this.identityId,
+    required this.keyHandle,
+    required this.state,
+    required this.created,
+    required this.updated,
+    required this.tenant,
+    required this.realm,
+    required this.identity,
+    required this.theme,
+  });
 
   static Credential mapToCredential(dynamic cred) {
     return Credential(
-      created: cred["created"],
-      handle: cred["handle"],
+      id: cred["id"],
+      localCreated: cred["localCreated"],
+      localUpdated: cred["localUpdated"],
+      apiBaseURL: cred["apiBaseUrl"],
+      tenantId: cred["tenantId"],
+      realmId: cred["realmId"],
+      identityId: cred["identityId"],
       keyHandle: cred["keyHandle"],
-      name: cred["name"],
-      logoURL: cred["logoURL"],
-      loginURI: cred["loginURI"],
-      enrollURI: cred["enrollURI"],
-      chain: cred["chain"],
-      rootFingerprint: cred["rootFingerprint"],
-      state: CredentialStateHelper.fromString(cred["state"])
+      state: CredentialStateHelper.fromString(cred["state"]),
+      created: cred["created"],
+      updated: cred["updated"],
+      tenant: Tenant.mapToTenant(cred["tenant"]),
+      realm: Realm.mapToRealm(cred["realm"]),
+      identity: Identity.mapToIdentity(cred["identity"]),
+      theme: Theme.mapToTheme(cred["theme"]),
     );
   }
 
-  @override
-  String toString() {
-    return "Credential = "
-        "[created = $created, "
-        "handle = $handle, "
-        "keyHandle = $keyHandle, "
-        "name = $name, "
-        "logoURL = $logoURL, "
-        "loginURI = $loginURI, "
-        "enrollURI = $enrollURI, "
-        "chain = $chain, "
-        "rootFingerprint = $rootFingerprint]";
+  String toJson() {
+    return "{"
+        "\"id\":\"$id\","
+        "\"localCreated\":\"$localCreated\","
+        "\"localUpdated\":\"$localUpdated\","
+        "\"apiBaseURL\":\"$apiBaseURL\","
+        "\"tenantId\":\"$tenantId\","
+        "\"realmId\":\"$realmId\","
+        "\"identityId\":\"$identityId\","
+        "\"keyHandle\":\"$keyHandle\","
+        "\"state\":\"$state\","
+        "\"created\":\"$created\","
+        "\"updated\":\"$updated\","
+        "\"tenant\":${tenant.toJson()},"
+        "\"realm\":${realm.toJson()},"
+        "\"identity\":${identity.toJson()},"
+        "\"theme\":${theme.toJson()}}";
   }
-}
-
-class ExtendCredentialsStatus {
-  static const String status = "status";
-  static const String update = "update";
-  static const String finish = "finish";
-  static const String error = "error";
-}
-
-/// OAuth token grant
-class TokenResponse {
-  /// OAuth token grant
-  String accessToken;
-  /// OIDC JWT token grant
-  String idToken;
-  /// type such as "Bearer"
-  String tokenType;
-  /// expiration of the [accessToken]
-  int expiresIn;
-
-  TokenResponse({
-    required this.accessToken,
-    required this.idToken,
-    required this.tokenType,
-    required this.expiresIn,
-  });
 
   @override
   String toString() {
-    return "TokenResponse = "
-        "[accessToken = $accessToken, "
-        "idToken = $idToken, "
-        "tokenType = $tokenType, "
-        "expiresIn = $expiresIn]";
+    return "{\"Credential\":${toJson()}}";
   }
 }
 
 /// State of given [Credential]
 enum CredentialState {
-  /// Credential is active
-  active,
-  /// Device has been deleted
-  deviceDeleted,
-  /// One or more fields failed their integrity checks
-  invalid,
-  /// User has been deleted
-  userDeleted,
-  /// User is suspended
-  userSuspended,
-  /// Unable to determine the state of the credential
-  unknown
+  /// [Credential] is active
+  ACTIVE,
+
+  /// [Credential] is revoked
+  REVOKED,
 }
 
 class CredentialStateHelper {
-  static CredentialState fromString(String? state) {
-    if(state == null) {
-      return  CredentialState.unknown;
-    }
-
-    switch (state) {
+  static CredentialState fromString(String state) {
+    switch (state.toLowerCase()) {
       case "active":
-        return CredentialState.active;
-      case "deviceDeleted":
-        return CredentialState.deviceDeleted;
-      case "userDeleted":
-        return CredentialState.userDeleted;
-      case "userSuspended":
-        return CredentialState.userSuspended;
-      case "invalid":
-        return CredentialState.invalid;
+        return CredentialState.ACTIVE;
+      case "revoked":
+        return CredentialState.REVOKED;
       default:
-        return CredentialState.unknown;
+        throw Exception("Cannot initialize CredentialState from invalid String value $state");
     }
+  }
+}
+
+/// Tenant information associated with a [Credential].
+class Tenant {
+  /// The display name of the tenant.
+  String displayName;
+
+  Tenant({
+    required this.displayName,
+  });
+
+  static Tenant mapToTenant(dynamic cred) {
+    return Tenant(
+      displayName: cred["displayName"],
+    );
+  }
+
+  String toJson() {
+    return "{"
+        "\"displayName\":\"$displayName\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"Tenant\":${toJson()}}";
+  }
+}
+
+/// Realm information associated with a [Credential].
+class Realm {
+  /// The display name of the realm.
+  String displayName;
+
+  Realm({
+    required this.displayName,
+  });
+
+  static Realm mapToRealm(dynamic cred) {
+    return Realm(
+      displayName: cred["displayName"],
+    );
+  }
+
+  String toJson() {
+    return "{"
+        "\"displayName\":\"$displayName\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"Realm\":${toJson()}}";
+  }
+}
+
+/// Identity information associated with a [Credential].
+class Identity {
+  /// The display name of the identity.
+  String displayName;
+
+  /// The username of the identity.
+  String username;
+
+  /// The primary email address of the identity.
+  String? primaryEmailAddress;
+
+  Identity({
+    required this.displayName,
+    required this.username,
+    required this.primaryEmailAddress,
+  });
+
+  static Identity mapToIdentity(dynamic cred) {
+    return Identity(
+      displayName: cred["displayName"],
+      username: cred["username"],
+      primaryEmailAddress: cred["primaryEmailAddress"],
+    );
+  }
+
+  String toJson() {
+    return "{"
+        "\"displayName\":\"$displayName\","
+        "\"username\":\"$username\","
+        "\"primaryEmailAddress\":\"$primaryEmailAddress\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"Identity\":${toJson()}}";
+  }
+}
+
+/// Theme associated with a [Credential].
+class Theme {
+  /// URL to for resolving the logo image for light mode.
+  String logoUrlLight;
+
+  /// URL to for resolving the logo image for dark mode.
+  String logoUrlDark;
+
+  /// URL for customer support portal.
+  String supportUrl;
+
+  Theme({
+    required this.logoUrlLight,
+    required this.logoUrlDark,
+    required this.supportUrl,
+  });
+
+  static Theme mapToTheme(dynamic cred) {
+    return Theme(
+      logoUrlLight: cred["logoLightUrl"],
+      logoUrlDark: cred["logoDarkUrl"],
+      supportUrl: cred["supportUrl"],
+    );
+  }
+
+  String toJson() {
+    return "{"
+        "\"logoUrlLight\":\"$logoUrlLight\","
+        "\"logoUrlDark\":\"$logoUrlDark\","
+        "\"supportUrl\":\"$supportUrl\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"Theme\":${toJson()}}";
+  }
+}
+
+/// A response returned after successfully authenticating.
+class AuthenticateResponse {
+  /// The redirect URL that originates from the /authorize call's `redirect_uri` parameter. The OAuth2 authorization `code` and the `state` parameter of the /authorize call are attached with the "code" and "state" parameters to this URL.
+  String redirectUrl;
+
+  /// An optional displayable message defined by policy returned by the cloud on success
+  String message;
+
+  AuthenticateResponse({
+    required this.redirectUrl,
+    required this.message,
+  });
+
+  String toJson() {
+    return "{"
+        "\"redirectUrl\":\"$redirectUrl\","
+        "\"message\":\"$message\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"AuthenticateResponse\":${toJson()}}";
   }
 }

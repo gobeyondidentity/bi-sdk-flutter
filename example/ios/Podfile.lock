@@ -1,18 +1,24 @@
 PODS:
-  - BeyondIdentityCoreSDK (0.7.0)
-  - BeyondIdentityEmbedded (0.7.0):
-    - BeyondIdentityCoreSDK (= 0.7.0)
-  - embeddedsdk (0.2.0):
-    - BeyondIdentityEmbedded (= 0.7.0)
+  - BeyondIdentityCoreSDK (1.0.4)
+  - BeyondIdentityEmbedded (1.0.4):
+    - BeyondIdentityCoreSDK (= 1.0.4)
+  - bi_sdk_flutter (1.0.0):
+    - BeyondIdentityEmbedded (= 1.0.4)
     - Flutter
   - Flutter (1.0.0)
+  - flutter_web_auth (0.4.0):
+    - Flutter
   - uni_links (0.0.1):
+    - Flutter
+  - url_launcher_ios (0.0.1):
     - Flutter
 
 DEPENDENCIES:
-  - embeddedsdk (from `.symlinks/plugins/embeddedsdk/ios`)
+  - bi_sdk_flutter (from `.symlinks/plugins/bi_sdk_flutter/ios`)
   - Flutter (from `Flutter`)
+  - flutter_web_auth (from `.symlinks/plugins/flutter_web_auth/ios`)
   - uni_links (from `.symlinks/plugins/uni_links/ios`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
@@ -20,20 +26,26 @@ SPEC REPOS:
     - BeyondIdentityEmbedded
 
 EXTERNAL SOURCES:
-  embeddedsdk:
-    :path: ".symlinks/plugins/embeddedsdk/ios"
+  bi_sdk_flutter:
+    :path: ".symlinks/plugins/bi_sdk_flutter/ios"
   Flutter:
     :path: Flutter
+  flutter_web_auth:
+    :path: ".symlinks/plugins/flutter_web_auth/ios"
   uni_links:
     :path: ".symlinks/plugins/uni_links/ios"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
-  BeyondIdentityCoreSDK: ea967b5fe72957401370e3a344152dadead7b479
-  BeyondIdentityEmbedded: cf356be569d9a580b8379d2006e3caa23f5840ad
-  embeddedsdk: 4ff59fb2d0e7aa0db8141aa60264e76e07f8e54d
-  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  BeyondIdentityCoreSDK: 0541ae53cb7f228a97e5dd340eb6005dd9f1567c
+  BeyondIdentityEmbedded: cc6cce05fd39cfe42ccf3064a3192a84d7f5fdd7
+  bi_sdk_flutter: 60b1c3a036f746260f71d95623b1429b43e94798
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_web_auth: fd071763f61703882adbb2524f5cd5251883118c
   uni_links: d97da20c7701486ba192624d99bffaaffcfc298a
+  url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
 
-PODFILE CHECKSUM: c9ac910a765c5da129d2b82fc1d44e1cc927d647
+PODFILE CHECKSUM: 88d32833604b5b3259d5fd3ac38aab9e2c29299d
 
 COCOAPODS: 1.11.2
