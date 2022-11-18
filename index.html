@@ -59,6 +59,7 @@
 <p>The Embedded SDK is a holistic SDK solution offering the entire experience embedded in your product. Users will not need
 to download the Beyond Identity Authenticator.</p>
 <h2 id="installation">Installation</h2>
+<h3 id="pubdev">Pub.Dev</h3>
 <p>Add the Beyond Identity Embedded SDK to your dependencies</p>
 <pre class="language-yaml"><code class="language-yaml">dependencies:
   bi_sdk_flutter: x.y.z
@@ -66,13 +67,28 @@ to download the Beyond Identity Authenticator.</p>
 <p>and run an implicit <code>flutter pub get</code></p>
 <h2 id="usage">Usage</h2>
 <p>Check out the <a href="https://developer.beyondidentity.com">documentation</a> for more information.</p>
-<h3 id="update-native">Update Native:</h3>
-<p>Make sure your <code>android/build.gradle</code> supports minSdkVersion 26 or later</p>
+<h3 id="update-android">Update Android</h3>
+<p>Please make sure your <code>android/build.gradle</code> supports <code>minSdkVersion</code> 26 or later.</p>
 <pre class="language-dart"><code>buildscript {
   ext {
     minSdkVersion = 26
   }
 }
+</code></pre>
+<h3 id="update-ios">Update iOS</h3>
+<p>Please make sure your project supports "minimum deployment target" 13.0 or later.
+In your <code>ios/Podfile</code> set:</p>
+<pre class="language-sh"><code class="language-sh">platform :ios, '13.0'
+</code></pre>
+<h3 id="setup">Setup</h3>
+<p>First, before calling the Embedded functions, make sure to initialize the SDK.</p><!-- javascript is used here since flutter is not available and dart doesn't highlight at all. -->
+<pre class="language-javascript"><code class="language-javascript">import 'package:bi_sdk_flutter/embeddedsdk.dart';
+
+Embeddedsdk.initialize(
+    String biometricPrompt,
+    bool enableLogging,
+    List&lt;String&gt;? allowedDomains, /* Optional */
+)
 </code></pre>
 <h3 id="example-app">Example app</h3>
 <p>To run the Android example app</p>
@@ -140,7 +156,7 @@ to download the Beyond Identity Authenticator.</p>
 <footer>
   <span class="no-break">
     bi_sdk_flutter
-      1.0.0
+      1.0.1
   </span>
 
   
