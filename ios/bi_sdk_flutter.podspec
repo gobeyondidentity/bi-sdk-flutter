@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name              = 'bi_sdk_flutter'
-  s.version           = '1.0.0'
+  s.version           = '1.0.1'
   s.summary           = 'Passwordless identities for workforces and customers'
   s.homepage          = 'https://beyondidentity.com'
   s.license           = { :file => '../LICENSE' }

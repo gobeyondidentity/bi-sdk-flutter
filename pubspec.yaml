@@ -1,6 +1,6 @@
 name: bi_sdk_flutter
 description: Passwordless identities for workforces and customers
-version: 1.0.0
+version: 1.0.1
 homepage: https://www.beyondidentity.com
 repository: https://github.com/gobeyondidentity/bi-sdk-flutter
 documentation: https://developer.beyondidentity.com/
@@ -13,7 +13,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  url_launcher: ^6.1.6
 
 dev_dependencies:
   flutter_test:

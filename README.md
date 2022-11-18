@@ -19,6 +19,8 @@ to download the Beyond Identity Authenticator.
 
 ## Installation
 
+### Pub.Dev
+
 Add the Beyond Identity Embedded SDK to your dependencies
 
 ```yaml
@@ -29,11 +31,12 @@ dependencies:
 and run an implicit `flutter pub get`
 
 ## Usage
+
 Check out the [documentation](https://developer.beyondidentity.com) for more information.
 
-### Update Native:
+### Update Android
 
-Make sure your `android/build.gradle` supports minSdkVersion 26 or later
+Please make sure your `android/build.gradle` supports `minSdkVersion` 26 or later.
 
 ```
 buildscript {
@@ -41,6 +44,30 @@ buildscript {
     minSdkVersion = 26
   }
 }
+```
+
+### Update iOS
+
+Please make sure your project supports "minimum deployment target" 13.0 or later.
+In your `ios/Podfile` set:
+
+```sh
+platform :ios, '13.0'
+```
+
+### Setup
+
+First, before calling the Embedded functions, make sure to initialize the SDK.
+
+<!-- javascript is used here since flutter is not available and dart doesn't highlight at all. -->
+```javascript
+import 'package:bi_sdk_flutter/embeddedsdk.dart';
+
+Embeddedsdk.initialize(
+    String biometricPrompt,
+    bool enableLogging,
+    List<String>? allowedDomains, /* Optional */
+)
 ```
 
 ### Example app
