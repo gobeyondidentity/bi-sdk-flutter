@@ -2,7 +2,7 @@ PODS:
   - BeyondIdentityCoreSDK (0.7.0)
   - BeyondIdentityEmbedded (0.7.0):
     - BeyondIdentityCoreSDK (= 0.7.0)
-  - embeddedsdk (0.2.0):
+  - embeddedsdk (0.3.0):
     - BeyondIdentityEmbedded (= 0.7.0)
     - Flutter
   - Flutter (1.0.0)
