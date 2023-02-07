@@ -63,68 +63,76 @@
   A response returned after successfully authenticating.
 </dd>
 
-        <dt id="BindCredentialResponse">
-  <span class="name "><a href="../embeddedsdk/BindCredentialResponse-class.html">BindCredentialResponse</a></span> 
+        <dt id="BindPasskeyResponse">
+  <span class="name "><a href="../embeddedsdk/BindPasskeyResponse-class.html">BindPasskeyResponse</a></span> 
 
 </dt>
 <dd>
-  A response returned after successfully binding a credential to a device.
+  A response returned after successfully binding a passkey to a device.
 </dd>
 
-        <dt id="Credential">
-  <span class="name "><a href="../embeddedsdk/Credential-class.html">Credential</a></span> 
-
-</dt>
-<dd>
-  Represent User's credential, wrapper for X.509 Certificate
-</dd>
-
-        <dt id="CredentialStateHelper">
-  <span class="name "><a href="../embeddedsdk/CredentialStateHelper-class.html">CredentialStateHelper</a></span> 
+        <dt id="EmbeddedSdk">
+  <span class="name "><a href="../embeddedsdk/EmbeddedSdk-class.html">EmbeddedSdk</a></span> 
 
 </dt>
 <dd>
   
 </dd>
 
-        <dt id="Embeddedsdk">
-  <span class="name "><a href="../embeddedsdk/Embeddedsdk-class.html">Embeddedsdk</a></span> 
+        <dt id="Passkey">
+  <span class="name "><a href="../embeddedsdk/Passkey-class.html">Passkey</a></span> 
+
+</dt>
+<dd>
+  A Universal Passkey is a public and private key pair. The private key is generated, stored, and never leaves the user’s devices’ hardware root of trust (i.e. Secure Enclave).
+The public key is sent to the Beyond Identity cloud. The private key cannot be tampered with, viewed, or removed from the device in which it is created unless the user explicitly indicates that the trusted device be removed.
+Passkeys are cryptographically linked to devices and an Identity. A single device can store multiple passkeys for different users and a single Identity can have multiple passkeys.
+</dd>
+
+        <dt id="PasskeyIdentity">
+  <span class="name "><a href="../embeddedsdk/PasskeyIdentity-class.html">PasskeyIdentity</a></span> 
+
+</dt>
+<dd>
+  Identity information associated with a <a href="../embeddedsdk/Passkey-class.html">Passkey</a>.
+An Identity is a unique identifier that may be used by an end-user to gain access governed by Beyond Identity.
+An Identity is created at the Realm level.
+An end-user may have multiple identities. A Realm can have many Identities.
+</dd>
+
+        <dt id="PasskeyRealm">
+  <span class="name "><a href="../embeddedsdk/PasskeyRealm-class.html">PasskeyRealm</a></span> 
+
+</dt>
+<dd>
+  Realm information associated with a <a href="../embeddedsdk/Passkey-class.html">Passkey</a>.
+A Realm is a unique administrative domain within a <code>Tenant</code>.
+Some Tenants will only need the use of a single Realm, in this case a Realm and a Tenant may seem synonymous.
+Each Realm contains a unique set of Directory, Policy, Event, Application, and Branding objects.
+</dd>
+
+        <dt id="PasskeyStateHelper">
+  <span class="name "><a href="../embeddedsdk/PasskeyStateHelper-class.html">PasskeyStateHelper</a></span> 
 
 </dt>
 <dd>
   
 </dd>
 
-        <dt id="Identity">
-  <span class="name "><a href="../embeddedsdk/Identity-class.html">Identity</a></span> 
+        <dt id="PasskeyTenant">
+  <span class="name "><a href="../embeddedsdk/PasskeyTenant-class.html">PasskeyTenant</a></span> 
 
 </dt>
 <dd>
-  Identity information associated with a <a href="../embeddedsdk/Credential-class.html">Credential</a>.
+  Tenant information associated with a <a href="../embeddedsdk/Passkey-class.html">Passkey</a>. A Tenant represents an organization in the Beyond Identity Cloud and serves as a root container for all other cloud components in your configuration.
 </dd>
 
-        <dt id="Realm">
-  <span class="name "><a href="../embeddedsdk/Realm-class.html">Realm</a></span> 
+        <dt id="PasskeyTheme">
+  <span class="name "><a href="../embeddedsdk/PasskeyTheme-class.html">PasskeyTheme</a></span> 
 
 </dt>
 <dd>
-  Realm information associated with a <a href="../embeddedsdk/Credential-class.html">Credential</a>.
-</dd>
-
-        <dt id="Tenant">
-  <span class="name "><a href="../embeddedsdk/Tenant-class.html">Tenant</a></span> 
-
-</dt>
-<dd>
-  Tenant information associated with a <a href="../embeddedsdk/Credential-class.html">Credential</a>.
-</dd>
-
-        <dt id="Theme">
-  <span class="name "><a href="../embeddedsdk/Theme-class.html">Theme</a></span> 
-
-</dt>
-<dd>
-  Theme associated with a <a href="../embeddedsdk/Credential-class.html">Credential</a>.
+  Theme associated with a <a href="../embeddedsdk/Passkey-class.html">Passkey</a>.
 </dd>
 
       </dl>
@@ -139,12 +147,12 @@
       <h2>Enums</h2>
 
       <dl>
-        <dt id="CredentialState">
-  <span class="name "><a href="../embeddedsdk/CredentialState.html">CredentialState</a></span> 
+        <dt id="PasskeyState">
+  <span class="name "><a href="../embeddedsdk/PasskeyState.html">PasskeyState</a></span> 
 
 </dt>
 <dd>
-  State of given <a href="../embeddedsdk/Credential-class.html">Credential</a>
+  State of a given <a href="../embeddedsdk/Passkey-class.html">Passkey</a>
 </dd>
 
       </dl>
@@ -171,7 +179,6 @@
     <ol>
       <li class="section-title">Libraries</li>
       <li><a href="../embeddedsdk/embeddedsdk-library.html">embeddedsdk</a></li>
-      <li><a href="../simple_dialog/simple_dialog-library.html">simple_dialog</a></li>
 </ol>
 
   </div>
@@ -181,14 +188,14 @@
     <ol>
   <li class="section-title"><a href="../embeddedsdk/embeddedsdk-library.html#classes">Classes</a></li>
   <li><a href="../embeddedsdk/AuthenticateResponse-class.html">AuthenticateResponse</a></li>
-  <li><a href="../embeddedsdk/BindCredentialResponse-class.html">BindCredentialResponse</a></li>
-  <li><a href="../embeddedsdk/Credential-class.html">Credential</a></li>
-  <li><a href="../embeddedsdk/CredentialStateHelper-class.html">CredentialStateHelper</a></li>
-  <li><a href="../embeddedsdk/Embeddedsdk-class.html">Embeddedsdk</a></li>
-  <li><a href="../embeddedsdk/Identity-class.html">Identity</a></li>
-  <li><a href="../embeddedsdk/Realm-class.html">Realm</a></li>
-  <li><a href="../embeddedsdk/Tenant-class.html">Tenant</a></li>
-  <li><a href="../embeddedsdk/Theme-class.html">Theme</a></li>
+  <li><a href="../embeddedsdk/BindPasskeyResponse-class.html">BindPasskeyResponse</a></li>
+  <li><a href="../embeddedsdk/EmbeddedSdk-class.html">EmbeddedSdk</a></li>
+  <li><a href="../embeddedsdk/Passkey-class.html">Passkey</a></li>
+  <li><a href="../embeddedsdk/PasskeyIdentity-class.html">PasskeyIdentity</a></li>
+  <li><a href="../embeddedsdk/PasskeyRealm-class.html">PasskeyRealm</a></li>
+  <li><a href="../embeddedsdk/PasskeyStateHelper-class.html">PasskeyStateHelper</a></li>
+  <li><a href="../embeddedsdk/PasskeyTenant-class.html">PasskeyTenant</a></li>
+  <li><a href="../embeddedsdk/PasskeyTheme-class.html">PasskeyTheme</a></li>
 
 
 
@@ -196,7 +203,7 @@
 
 
   <li class="section-title"><a href="../embeddedsdk/embeddedsdk-library.html#enums">Enums</a></li>
-  <li><a href="../embeddedsdk/CredentialState.html">CredentialState</a></li>
+  <li><a href="../embeddedsdk/PasskeyState.html">PasskeyState</a></li>
 
 
 </ol>
@@ -208,7 +215,7 @@
 <footer>
   <span class="no-break">
     bi_sdk_flutter
-      1.0.1
+      2.0.0
   </span>
 
   

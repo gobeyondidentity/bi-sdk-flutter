@@ -55,9 +55,8 @@
 <p></p>
 <h1 id="beyond-identity-flutter-sdk">Beyond Identity Flutter SDK</h1>
 <p><a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a></p>
-<h3 id="embedded">Embedded</h3>
-<p>The Embedded SDK is a holistic SDK solution offering the entire experience embedded in your product. Users will not need
-to download the Beyond Identity Authenticator.</p>
+<h3 id="embedded-sdk">Embedded SDK</h3>
+<p>Goodbye, passwords! The Beyond Identity SDK for Flutter is a wrapper around our Native Embedded SDKs (<a href="https://github.com/gobeyondidentity/bi-sdk-android">Android</a> and <a href="https://github.com/gobeyondidentity/bi-sdk-swift">iOS</a>), which allow you to embed the Passwordless experience into your product. Users will not need to download the Beyond Identity Authenticator. This SDK supports OIDC and OAuth2.</p>
 <h2 id="installation">Installation</h2>
 <h3 id="pubdev">Pub.Dev</h3>
 <p>Add the Beyond Identity Embedded SDK to your dependencies</p>
@@ -65,8 +64,6 @@ to download the Beyond Identity Authenticator.</p>
   bi_sdk_flutter: x.y.z
 </code></pre>
 <p>and run an implicit <code>flutter pub get</code></p>
-<h2 id="usage">Usage</h2>
-<p>Check out the <a href="https://developer.beyondidentity.com">documentation</a> for more information.</p>
 <h3 id="update-android">Update Android</h3>
 <p>Please make sure your <code>android/build.gradle</code> supports <code>minSdkVersion</code> 26 or later.</p>
 <pre class="language-dart"><code>buildscript {
@@ -80,17 +77,19 @@ to download the Beyond Identity Authenticator.</p>
 In your <code>ios/Podfile</code> set:</p>
 <pre class="language-sh"><code class="language-sh">platform :ios, '13.0'
 </code></pre>
+<h2 id="usage">Usage</h2>
+<p>Check out the <a href="https://developer.beyondidentity.com">Developer Documentation</a> and the <a href="https://gobeyondidentity.github.io/bi-sdk-flutter/">SDK API Documentation</a> for more information.</p>
 <h3 id="setup">Setup</h3>
-<p>First, before calling the Embedded functions, make sure to initialize the SDK.</p><!-- javascript is used here since flutter is not available and dart doesn't highlight at all. -->
-<pre class="language-javascript"><code class="language-javascript">import 'package:bi_sdk_flutter/embeddedsdk.dart';
+<p>First, before calling the Embedded functions, make sure to initialize the SDK.</p>
+<pre class="language-dart"><code class="language-dart">import 'package:bi_sdk_flutter/embeddedsdk.dart';
 
-Embeddedsdk.initialize(
-    String biometricPrompt,
-    bool enableLogging,
+EmbeddedSdk.initialize(
+    String biometricAskPrompt,
     List&lt;String&gt;? allowedDomains, /* Optional */
+    Future&lt;Function&gt;? logger, /* Optional */
 )
 </code></pre>
-<h3 id="example-app">Example app</h3>
+<h2 id="example-app">Example App</h2>
 <p>To run the Android example app</p>
 <ol>
 <li>Run <code>flutter pub get</code> from the root of the repo</li>
@@ -110,13 +109,6 @@ Embeddedsdk.initialize(
         <dl>
           <dt id="embeddedsdk">
   <span class="name"><a href="embeddedsdk/embeddedsdk-library.html">embeddedsdk</a></span> 
-
-</dt>
-<dd>
-</dd>
-
-          <dt id="simple_dialog">
-  <span class="name"><a href="simple_dialog/simple_dialog-library.html">simple_dialog</a></span> 
 
 </dt>
 <dd>
@@ -143,7 +135,6 @@ Embeddedsdk.initialize(
     <ol>
       <li class="section-title">Libraries</li>
       <li><a href="embeddedsdk/embeddedsdk-library.html">embeddedsdk</a></li>
-      <li><a href="simple_dialog/simple_dialog-library.html">simple_dialog</a></li>
 </ol>
 
   </div>
@@ -156,7 +147,7 @@ Embeddedsdk.initialize(
 <footer>
   <span class="no-break">
     bi_sdk_flutter
-      1.0.1
+      2.0.0
   </span>
 
   
