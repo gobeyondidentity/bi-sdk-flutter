@@ -5,12 +5,14 @@ import android.app.Application
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.NonNull
 import com.beyondidentity.embedded.sdk.EmbeddedSdk
 import com.beyondidentity.embedded.sdk.models.AuthenticateResponse
-import com.beyondidentity.embedded.sdk.models.BindCredentialResponse
-import com.beyondidentity.embedded.sdk.models.Credential
+import com.beyondidentity.embedded.sdk.models.BindPasskeyResponse
+import com.beyondidentity.embedded.sdk.models.Passkey
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -22,8 +24,8 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 
-/** EmbeddedsdkPlugin */
-class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
+/** EmbeddedSdkPlugin */
+class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
     PluginRegistry.ActivityResultListener {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
@@ -58,35 +60,41 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 "initialize" -> {
                     val app: Application? = currentActivity?.application
                     val allowedDomains: List<String>? = call.argument("allowedDomains")
-                    val biometricPrompt: String? = call.argument("biometricPrompt")
-                    call.argument<Boolean>("enableLogging")?.let {
+                    val biometricAskPrompt: String? = call.argument("biometricAskPrompt")
+                    call.argument<Boolean>("enableLogger")?.let {
                         if (it) {
-                            this.logger = { log -> Log.d("FlutterEmbedded", log) }
+                            this.logger = { log ->
+                                Handler(Looper.getMainLooper()).post {
+                                    val args: MutableMap<String, Any> = HashMap()
+                                    args["message"] = log
+                                    channel.invokeMethod("print", args)
+                                }
+                            }
                         }
                     }
 
-                    checkNulls(app, biometricPrompt)?.let { (app, biometricPrompt) ->
+                    checkNulls(app, biometricAskPrompt)?.let { (app, biometricAskPrompt) ->
                         EmbeddedSdk.init(
                             app = app as Application,
                             keyguardPrompt = keyguardPrompt,
                             logger = this.logger,
-                            biometricAskPrompt = biometricPrompt as String,
+                            biometricAskPrompt = biometricAskPrompt as String,
                             allowedDomains = allowedDomains,
                         )
                         isEmbeddedSdkInitialized = true
                     } ?: result.error(EMBEDDED_SDK_ERROR, "Failed to initialize EmbeddedSdk", null)
                 }
-                "bindCredential" -> {
+                "bindPasskey" -> {
                     call.argument<String>("url")?.let { url ->
-                        EmbeddedSdk.bindCredential(url) { bindCredentialResult ->
-                            bindCredentialResult.onSuccess { bindCredentialResponse ->
+                        EmbeddedSdk.bindPasskey(url) { bindPasskeyResult ->
+                            bindPasskeyResult.onSuccess { bindPasskeyResponse ->
                                 result.success(
-                                    makeBindCredentialMap(
-                                        bindCredentialResponse
+                                    makeBindPasskeyMap(
+                                        bindPasskeyResponse
                                     )
                                 )
                             }
-                            bindCredentialResult.onFailure {
+                            bindPasskeyResult.onFailure {
                                 result.error(
                                     EMBEDDED_SDK_ERROR,
                                     it.localizedMessage,
@@ -96,7 +104,7 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                         }
                     } ?: result.error(
                         EMBEDDED_SDK_ERROR,
-                        "Could not get bindCredential arguments",
+                        "Could not get bindPasskey arguments",
                         null
                     )
                 }
@@ -104,7 +112,7 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                     call.argument<String>("url")?.let { url ->
                         EmbeddedSdk.authenticate(
                             url,
-                            call.argument<String>("credentialId") ?: "",
+                            call.argument<String>("passkeyId") ?: "",
                         ) { authenticateResult ->
                             authenticateResult.onSuccess { authenticateResponse ->
                                 result.success(
@@ -127,17 +135,17 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                         null
                     )
                 }
-                "getCredentials" -> {
-                    EmbeddedSdk.getCredentials { getCredentialsResult ->
-                        getCredentialsResult.onSuccess { credentials ->
-                            result.success(credentials.map { credential ->
-                                makeCredentialMap(
-                                    credential
+                "getPasskeys" -> {
+                    EmbeddedSdk.getPasskeys { getPasskeysResult ->
+                        getPasskeysResult.onSuccess { passkeys ->
+                            result.success(passkeys.map { passkey ->
+                                makePasskeyMap(
+                                    passkey
                                 )
                             })
                         }
                         // TODO standardize error messaging between iOS and Android
-                        getCredentialsResult.onFailure {
+                        getPasskeysResult.onFailure {
                             result.error(
                                 EMBEDDED_SDK_ERROR,
                                 it.localizedMessage,
@@ -146,11 +154,11 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                         }
                     }
                 }
-                "deleteCredential" -> {
-                    call.argument<String>("credentialId")?.let { id ->
-                        EmbeddedSdk.deleteCredential(id) { deleteCredentialResult ->
-                            deleteCredentialResult.onSuccess { result.success(id) }
-                            deleteCredentialResult.onFailure {
+                "deletePasskey" -> {
+                    call.argument<String>("passkeyId")?.let { passkeyId ->
+                        EmbeddedSdk.deletePasskey(passkeyId) { deletePasskeyResult ->
+                            deletePasskeyResult.onSuccess { result.success(passkeyId) }
+                            deletePasskeyResult.onFailure {
                                 result.error(
                                     EMBEDDED_SDK_ERROR,
                                     it.localizedMessage,
@@ -160,16 +168,16 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                         }
                     } ?: result.error(
                         EMBEDDED_SDK_ERROR,
-                        "Could not get deleteCredential arguments",
+                        "Could not get deletePasskey arguments",
                         null
                     )
                 }
-                "isBindCredentialUrl" -> {
+                "isBindPasskeyUrl" -> {
                     call.argument<String>("url")?.let { url ->
-                        result.success(EmbeddedSdk.isBindCredentialUrl(url))
+                        result.success(EmbeddedSdk.isBindPasskeyUrl(url))
                     } ?: result.error(
                         EMBEDDED_SDK_ERROR,
-                        "Could not get isBindCredentialUrl arguments",
+                        "Could not get isBindPasskeyUrl arguments",
                         null
                     )
                 }
@@ -227,46 +235,46 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         "message" to authenticateResponse.message,
     )
 
-    private fun makeBindCredentialMap(bindCredentialResponse: BindCredentialResponse) = mapOf(
-        "credential" to makeCredentialMap(bindCredentialResponse.credential),
-        "postBindingRedirectUri" to bindCredentialResponse.postBindingRedirectUri,
+    private fun makeBindPasskeyMap(bindPasskeyResponse: BindPasskeyResponse) = mapOf(
+        "passkey" to makePasskeyMap(bindPasskeyResponse.passkey),
+        "postBindingRedirectUri" to bindPasskeyResponse.postBindingRedirectUri,
     )
 
-    private fun makeCredentialMap(credential: Credential) = mapOf(
-        "id" to credential.id,
-        "localCreated" to credential.localCreated.toString(),
-        "localUpdated" to credential.localUpdated.toString(),
-        "apiBaseUrl" to credential.apiBaseURL.toString(),
-        "tenantId" to credential.tenantId,
-        "realmId" to credential.realmId,
-        "identityId" to credential.identityId,
-        "keyHandle" to credential.keyHandle,
-        "state" to credential.state.toString(),
-        "created" to credential.created.toString(),
-        "updated" to credential.updated.toString(),
+    private fun makePasskeyMap(passkey: Passkey) = mapOf(
+        "id" to passkey.id,
+        "localCreated" to passkey.localCreated.toString(),
+        "localUpdated" to passkey.localUpdated.toString(),
+        "apiBaseUrl" to passkey.apiBaseUrl.toString(),
+        "keyHandle" to passkey.keyHandle,
+        "state" to passkey.state.toString(),
+        "created" to passkey.created.toString(),
+        "updated" to passkey.updated.toString(),
         "tenant" to mapOf(
-            "displayName" to credential.tenant.displayName,
+            "id" to passkey.tenant.id,
+            "displayName" to passkey.tenant.displayName,
         ),
         "realm" to mapOf(
-            "displayName" to credential.realm.displayName,
+            "id" to passkey.realm.id,
+            "displayName" to passkey.realm.displayName,
         ),
         "identity" to mapOf(
-            "displayName" to credential.identity.displayName,
-            "username" to credential.identity.username,
-            "primaryEmailAddress" to credential.identity.primaryEmailAddress,
+            "id" to passkey.identity.id,
+            "displayName" to passkey.identity.displayName,
+            "username" to passkey.identity.username,
+            "primaryEmailAddress" to passkey.identity.primaryEmailAddress,
         ),
         "theme" to mapOf(
-            "logoLightUrl" to credential.theme.logoUrlLight.toString(),
-            "logoDarkUrl" to credential.theme.logoUrlDark.toString(),
-            "supportUrl" to credential.theme.supportUrl.toString(),
-        )
+            "logoLightUrl" to passkey.theme.logoLightUrl.toString(),
+            "logoDarkUrl" to passkey.theme.logoDarkUrl.toString(),
+            "supportUrl" to passkey.theme.supportUrl.toString(),
+        ),
     )
 
     companion object {
         const val EMBEDDED_KEYGUARD_REQUEST = 4936
 
         const val EMBEDDED_METHOD_CHANNEL = "embeddedsdk_method_channel"
-        const val EMBEDDED_EXPORT_EVENT_CHANNEL = "embeddedsdk_export_event_channel"
+        const val EMBEDDED_EVENT_CHANNEL = "embeddedsdk_event_channel"
 
         const val EMBEDDED_SDK_ERROR = "FlutterEmbeddedSdkError"
     }

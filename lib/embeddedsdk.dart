@@ -1,43 +1,55 @@
 import 'dart:async';
 
+import 'package:bi_sdk_flutter/print.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-class Embeddedsdk {
+class EmbeddedSdk {
   static const MethodChannel _channel =
       MethodChannel('embeddedsdk_method_channel');
+
   static const EventChannel _eventChannel =
-      EventChannel('embeddedsdk_export_event_channel');
-  static Function(Map<String, String?>)? _exportCallback;
-  static StreamSubscription<dynamic>? _exportSubscription;
+      EventChannel('embeddedsdk_event_channel');
+  static Function(Map<String, String?>)? _eventCallback;
+  static StreamSubscription<dynamic>? _eventSubscription;
 
   /// Initialize and configure the Beyond Identity Embedded SDK.
   ///
   /// [allowedDomains] Optional array of domains that we whitelist against for network operations.
   /// This will default to Beyond Identity's allowed domains.
-  /// [biometricPrompt] is the prompt the user will see when asked for biometrics while
-  /// extending a credential to another device.
-  /// [enableLogging] enables logging if set to `true`.
-  static Future<void> initialize(String biometricPrompt, bool enableLogging,
-      {List<String>? allowedDomains = const <String>[]}) async {
+  /// [biometricAskPrompt] A prompt the user will see when asked for biometrics while extending a passkey to another device.
+  /// [logger] Custom logger to get logs from the SDK.
+  /// To enable logging, pass [EmbeddedSdk.enableLogger], otherwise, pass null.
+  static Future<void> initialize(
+    String biometricAskPrompt, {
+    List<String>? allowedDomains = const <String>[],
+    Future<Function>? logger,
+  }) async {
     await _channel.invokeMethod("initialize", {
       'allowedDomains': allowedDomains,
-      'biometricPrompt': biometricPrompt,
-      'enableLogging': enableLogging,
+      'biometricAskPrompt': biometricAskPrompt,
+      'enableLogger': logger != null,
     });
   }
 
-  /// Bind a credential to this device.
+  /// Custom logger to get logs from the SDK.
+  /// This must be called from within a [State].
+  static Future<Function> enableLogger() async {
+    return await enablePrinting();
+  }
+
+  /// Bind a passkey to this device.
   ///
-  /// [url] URL used to bind a credential to this device
-  /// Returns a [BindCredentialResponse] or throws an [Exception]
-  static Future<BindCredentialResponse> bindCredential(String url) async {
-    final Map<String, dynamic>? bindCredentialResponse =
-        await _channel.invokeMapMethod('bindCredential', {'url': url});
+  /// [url] URL used to bind a passkey to this device
+  /// Returns a [BindPasskeyResponse] or throws an [Exception]
+  static Future<BindPasskeyResponse> bindPasskey(String url) async {
+    final Map<String, dynamic>? bindPasskeyResponse =
+        await _channel.invokeMapMethod('bindPasskey', {'url': url});
 
     try {
-      return BindCredentialResponse(
-        credential: Credential.mapToCredential(bindCredentialResponse?["credential"]),
-        postBindingRedirectUri: bindCredentialResponse?["postBindingRedirectUri"],
+      return BindPasskeyResponse(
+        passkey: Passkey.mapToPasskey(bindPasskeyResponse?["passkey"]),
+        postBindingRedirectUri: bindPasskeyResponse?["postBindingRedirectUri"],
       );
     } on Exception {
       rethrow;
@@ -47,13 +59,14 @@ class Embeddedsdk {
   /// Authenticate a user.
   ///
   /// [url] URL used to authenticate
-  /// [credentialId] The ID of the credential with which to authenticate.
+  /// [passkeyId] The ID of the passkey with which to authenticate.
   /// Returns a [AuthenticateResponse] or throws an [Exception]
-  static Future<AuthenticateResponse> authenticate(String url, String credentialId) async {
+  static Future<AuthenticateResponse> authenticate(
+      String url, String passkeyId) async {
     final Map<String, dynamic>? authenticateResponse =
         await _channel.invokeMapMethod('authenticate', {
       'url': url,
-      'credentialId': credentialId,
+      'passkeyId': passkeyId,
     });
 
     try {
@@ -66,56 +79,56 @@ class Embeddedsdk {
     }
   }
 
-  /// Get all current credentials for this device.
+  /// Get all current passkeys for this device.
   ///
-  /// Returns a [List] of [Credential]s
-  static Future<List<Credential>> getCredentials() async {
-    List<dynamic>? credentialListMap =
-        await _channel.invokeListMethod("getCredentials");
-    List<Credential> credentialList = List.empty(growable: true);
+  /// Returns a [List] of [Passkey]s
+  static Future<List<Passkey>> getPasskeys() async {
+    List<dynamic>? passkeyListMap =
+        await _channel.invokeListMethod("getPasskeys");
+    List<Passkey> passkeyList = List.empty(growable: true);
 
-    if (credentialListMap != null) {
+    if (passkeyListMap != null) {
       try {
-        credentialList = credentialListMap
-            .map((cred) => Credential.mapToCredential(cred))
+        passkeyList = passkeyListMap
+            .map((passkey) => Passkey.mapToPasskey(passkey))
             .toList();
       } on Exception {
         rethrow;
       }
     } else {
-      throw Exception("Error getting credentials from platform");
+      throw Exception("Error getting passkeys from platform");
     }
 
-    return credentialList;
+    return passkeyList;
   }
 
-  /// Delete a [Credential] by ID on current device.
+  /// Delete a [Passkey] by ID on current device.
   ///
-  /// Warning: deleting a [Credential] is destructive and will remove everything
-  /// from the device. If no other device contains the credential then the user
+  /// Warning: deleting a [Passkey] is destructive and will remove everything
+  /// from the device. If no other device contains the passkey then the user
   /// will need to complete a recovery in order to log in again on this device.
   ///
-  /// [id] is the credential id, uniquely identifying a [Credential].
-  static Future<void> deleteCredential(String id) async {
-    await _channel.invokeMethod('deleteCredential', {
-      'credentialId': id,
+  /// [id] the unique identifier of the [Passkey].
+  static Future<void> deletePasskey(String id) async {
+    await _channel.invokeMethod('deletePasskey', {
+      'passkeyId': id,
     });
   }
 
-  /// Returns whether a Url is a valid Bind Credential Url or not.
+  /// Returns whether a URL is a valid Bind Passkey URL or not.
   ///
-  /// [url] A Url String
-  static Future<bool> isBindCredentialUrl(String url) async {
+  /// [url] A URL String
+  static Future<bool> isBindPasskeyUrl(String url) async {
     try {
-      return await _channel.invokeMethod('isBindCredentialUrl', {'url': url});
+      return await _channel.invokeMethod('isBindPasskeyUrl', {'url': url});
     } on Exception {
       rethrow;
     }
   }
 
-  /// Returns whether a Url is a valid Authenticate Url or not.
+  /// Returns whether a URL is a valid Authenticate URL or not.
   ///
-  /// [url] A Url String
+  /// [url] A URL String
   static Future<bool> isAuthenticateUrl(String url) async {
     try {
       return await _channel.invokeMethod('isAuthenticateUrl', {'url': url});
@@ -125,86 +138,76 @@ class Embeddedsdk {
   }
 }
 
-/// A response returned after successfully binding a credential to a device.
-class BindCredentialResponse {
-  /// The [Credential] bound to the device.
-  Credential credential;
+/// A response returned after successfully binding a passkey to a device.
+class BindPasskeyResponse {
+  /// The [Passkey] bound to the device.
+  Passkey passkey;
 
-  /// A URI that can be redirected to once a credential is bound. This could be a URI that automatically logs the user in with the newly bound credential, or a success page indicating that a credential has been bound.
+  /// A URI that can be redirected to once a passkey is bound. This could be a URI that automatically logs the user in with the newly bound passkey, or a success page indicating that a passkey has been bound.
   String postBindingRedirectUri;
 
-  BindCredentialResponse({
-    required this.credential,
+  BindPasskeyResponse({
+    required this.passkey,
     required this.postBindingRedirectUri,
   });
 
   String toJson() {
     return "{"
-        "\"credential\":${credential.toJson()},"
+        "\"passkey\":${passkey.toJson()},"
         "\"postBindingRedirectUri\":\"$postBindingRedirectUri\"}";
   }
 
   @override
   String toString() {
-    return "{\"BindCredentialResponse\":${toJson()}}";
+    return "{\"BindPasskeyResponse\":${toJson()}}";
   }
 }
 
-/// Represent User's credential, wrapper for X.509 Certificate
-class Credential {
-  /// The Globally unique ID of this Credential.
+/// A Universal Passkey is a public and private key pair. The private key is generated, stored, and never leaves the user’s devices’ hardware root of trust (i.e. Secure Enclave).
+/// The public key is sent to the Beyond Identity cloud. The private key cannot be tampered with, viewed, or removed from the device in which it is created unless the user explicitly indicates that the trusted device be removed.
+/// Passkeys are cryptographically linked to devices and an Identity. A single device can store multiple passkeys for different users and a single Identity can have multiple passkeys.
+class Passkey {
+  /// The Globally unique ID of this passkey.
   String id;
 
-  /// The time when this credential was created locally. This could be different from "created" which is the time when this credential was created on the server.
+  /// The time when this passkey was created locally. This could be different from "created" which is the time when this passkey was created on the server.
   String localCreated;
 
-  /// The last time when this credential was updated locally. This could be different from "updated" which is the last time when this credential was updated on the server.
+  /// The last time when this passkey was updated locally. This could be different from "updated" which is the last time when this passkey was updated on the server.
   String localUpdated;
 
   /// The base url for all binding & auth requests
-  String apiBaseURL;
-
-  /// The Identity's Tenant.
-  String tenantId;
-
-  /// The Identity's Realm.
-  String realmId;
-
-  /// The Identity that owns this Credential.
-  String identityId;
+  String apiBaseUrl;
 
   /// Associated key handle.
   String keyHandle;
 
-  /// The current state of this credential
-  CredentialState state;
+  /// The current state of this passkey
+  PasskeyState state;
 
-  /// The time this credential was created.
+  /// The time this passkey was created.
   String created;
 
-  /// The last time this credential was updated.
+  /// The last time this passkey was updated.
   String updated;
 
-  /// Tenant information associated with this credential.
-  Tenant tenant;
+  /// Tenant information associated with this passkey.
+  PasskeyTenant tenant;
 
-  /// Realm information associated with this credential.
-  Realm realm;
+  /// Realm information associated with this passkey.
+  PasskeyRealm realm;
 
-  /// Identity information associated with this credential.
-  Identity identity;
+  /// Identity information associated with this passkey.
+  PasskeyIdentity identity;
 
-  /// Theme information associated with this credential
-  Theme theme;
+  /// Theme information associated with this passkey
+  PasskeyTheme theme;
 
-  Credential({
+  Passkey({
     required this.id,
     required this.localCreated,
     required this.localUpdated,
-    required this.apiBaseURL,
-    required this.tenantId,
-    required this.realmId,
-    required this.identityId,
+    required this.apiBaseUrl,
     required this.keyHandle,
     required this.state,
     required this.created,
@@ -215,23 +218,20 @@ class Credential {
     required this.theme,
   });
 
-  static Credential mapToCredential(dynamic cred) {
-    return Credential(
-      id: cred["id"],
-      localCreated: cred["localCreated"],
-      localUpdated: cred["localUpdated"],
-      apiBaseURL: cred["apiBaseUrl"],
-      tenantId: cred["tenantId"],
-      realmId: cred["realmId"],
-      identityId: cred["identityId"],
-      keyHandle: cred["keyHandle"],
-      state: CredentialStateHelper.fromString(cred["state"]),
-      created: cred["created"],
-      updated: cred["updated"],
-      tenant: Tenant.mapToTenant(cred["tenant"]),
-      realm: Realm.mapToRealm(cred["realm"]),
-      identity: Identity.mapToIdentity(cred["identity"]),
-      theme: Theme.mapToTheme(cred["theme"]),
+  static Passkey mapToPasskey(dynamic passkey) {
+    return Passkey(
+      id: passkey["id"],
+      localCreated: passkey["localCreated"],
+      localUpdated: passkey["localUpdated"],
+      apiBaseUrl: passkey["apiBaseUrl"],
+      keyHandle: passkey["keyHandle"],
+      state: PasskeyStateHelper.fromString(passkey["state"]),
+      created: passkey["created"],
+      updated: passkey["updated"],
+      tenant: PasskeyTenant.mapToTenant(passkey["tenant"]),
+      realm: PasskeyRealm.mapToRealm(passkey["realm"]),
+      identity: PasskeyIdentity.mapToIdentity(passkey["identity"]),
+      theme: PasskeyTheme.mapToTheme(passkey["theme"]),
     );
   }
 
@@ -240,10 +240,7 @@ class Credential {
         "\"id\":\"$id\","
         "\"localCreated\":\"$localCreated\","
         "\"localUpdated\":\"$localUpdated\","
-        "\"apiBaseURL\":\"$apiBaseURL\","
-        "\"tenantId\":\"$tenantId\","
-        "\"realmId\":\"$realmId\","
-        "\"identityId\":\"$identityId\","
+        "\"apiBaseUrl\":\"$apiBaseUrl\","
         "\"keyHandle\":\"$keyHandle\","
         "\"state\":\"$state\","
         "\"created\":\"$created\","
@@ -256,49 +253,58 @@ class Credential {
 
   @override
   String toString() {
-    return "{\"Credential\":${toJson()}}";
+    return "{\"Passkey\":${toJson()}}";
   }
 }
 
-/// State of given [Credential]
-enum CredentialState {
-  /// [Credential] is active
+/// State of a given [Passkey]
+enum PasskeyState {
+  /// [Passkey] is active
+  // ignore: constant_identifier_names
   ACTIVE,
 
-  /// [Credential] is revoked
+  /// [Passkey] is revoked
+  // ignore: constant_identifier_names
   REVOKED,
 }
 
-class CredentialStateHelper {
-  static CredentialState fromString(String state) {
+class PasskeyStateHelper {
+  static PasskeyState fromString(String state) {
     switch (state.toLowerCase()) {
       case "active":
-        return CredentialState.ACTIVE;
+        return PasskeyState.ACTIVE;
       case "revoked":
-        return CredentialState.REVOKED;
+        return PasskeyState.REVOKED;
       default:
-        throw Exception("Cannot initialize CredentialState from invalid String value $state");
+        throw Exception(
+            "Cannot initialize PasskeyState from invalid String value $state");
     }
   }
 }
 
-/// Tenant information associated with a [Credential].
-class Tenant {
+/// Tenant information associated with a [Passkey]. A Tenant represents an organization in the Beyond Identity Cloud and serves as a root container for all other cloud components in your configuration.
+class PasskeyTenant {
+  /// The unique identifier of the tenant.
+  String id;
+
   /// The display name of the tenant.
   String displayName;
 
-  Tenant({
+  PasskeyTenant({
+    required this.id,
     required this.displayName,
   });
 
-  static Tenant mapToTenant(dynamic cred) {
-    return Tenant(
-      displayName: cred["displayName"],
+  static PasskeyTenant mapToTenant(dynamic passkey) {
+    return PasskeyTenant(
+      id: passkey["id"],
+      displayName: passkey["displayName"],
     );
   }
 
   String toJson() {
     return "{"
+        "\"id\":\"$id\","
         "\"displayName\":\"$displayName\"}";
   }
 
@@ -308,23 +314,32 @@ class Tenant {
   }
 }
 
-/// Realm information associated with a [Credential].
-class Realm {
+/// Realm information associated with a [Passkey].
+/// A Realm is a unique administrative domain within a `Tenant`.
+/// Some Tenants will only need the use of a single Realm, in this case a Realm and a Tenant may seem synonymous.
+/// Each Realm contains a unique set of Directory, Policy, Event, Application, and Branding objects.
+class PasskeyRealm {
+  /// The unique identifier of the realm.
+  String id;
+
   /// The display name of the realm.
   String displayName;
 
-  Realm({
+  PasskeyRealm({
+    required this.id,
     required this.displayName,
   });
 
-  static Realm mapToRealm(dynamic cred) {
-    return Realm(
-      displayName: cred["displayName"],
+  static PasskeyRealm mapToRealm(dynamic passkey) {
+    return PasskeyRealm(
+      id: passkey["id"],
+      displayName: passkey["displayName"],
     );
   }
 
   String toJson() {
     return "{"
+        "\"id\":\"$id\","
         "\"displayName\":\"$displayName\"}";
   }
 
@@ -334,8 +349,14 @@ class Realm {
   }
 }
 
-/// Identity information associated with a [Credential].
-class Identity {
+/// Identity information associated with a [Passkey].
+/// An Identity is a unique identifier that may be used by an end-user to gain access governed by Beyond Identity.
+/// An Identity is created at the Realm level.
+/// An end-user may have multiple identities. A Realm can have many Identities.
+class PasskeyIdentity {
+  /// The unique identifier of the identity.
+  String id;
+
   /// The display name of the identity.
   String displayName;
 
@@ -345,22 +366,25 @@ class Identity {
   /// The primary email address of the identity.
   String? primaryEmailAddress;
 
-  Identity({
+  PasskeyIdentity({
+    required this.id,
     required this.displayName,
     required this.username,
     required this.primaryEmailAddress,
   });
 
-  static Identity mapToIdentity(dynamic cred) {
-    return Identity(
-      displayName: cred["displayName"],
-      username: cred["username"],
-      primaryEmailAddress: cred["primaryEmailAddress"],
+  static PasskeyIdentity mapToIdentity(dynamic passkey) {
+    return PasskeyIdentity(
+      id: passkey["id"],
+      displayName: passkey["displayName"],
+      username: passkey["username"],
+      primaryEmailAddress: passkey["primaryEmailAddress"],
     );
   }
 
   String toJson() {
     return "{"
+        "\"id\":\"$id\","
         "\"displayName\":\"$displayName\","
         "\"username\":\"$username\","
         "\"primaryEmailAddress\":\"$primaryEmailAddress\"}";
@@ -372,35 +396,35 @@ class Identity {
   }
 }
 
-/// Theme associated with a [Credential].
-class Theme {
+/// Theme associated with a [Passkey].
+class PasskeyTheme {
   /// URL to for resolving the logo image for light mode.
-  String logoUrlLight;
+  String logoLightUrl;
 
   /// URL to for resolving the logo image for dark mode.
-  String logoUrlDark;
+  String logoDarkUrl;
 
   /// URL for customer support portal.
   String supportUrl;
 
-  Theme({
-    required this.logoUrlLight,
-    required this.logoUrlDark,
+  PasskeyTheme({
+    required this.logoLightUrl,
+    required this.logoDarkUrl,
     required this.supportUrl,
   });
 
-  static Theme mapToTheme(dynamic cred) {
-    return Theme(
-      logoUrlLight: cred["logoLightUrl"],
-      logoUrlDark: cred["logoDarkUrl"],
-      supportUrl: cred["supportUrl"],
+  static PasskeyTheme mapToTheme(dynamic passkey) {
+    return PasskeyTheme(
+      logoLightUrl: passkey["logoLightUrl"],
+      logoDarkUrl: passkey["logoDarkUrl"],
+      supportUrl: passkey["supportUrl"],
     );
   }
 
   String toJson() {
     return "{"
-        "\"logoUrlLight\":\"$logoUrlLight\","
-        "\"logoUrlDark\":\"$logoUrlDark\","
+        "\"logoLightUrl\":\"$logoLightUrl\","
+        "\"logoDarkUrl\":\"$logoDarkUrl\","
         "\"supportUrl\":\"$supportUrl\"}";
   }
 

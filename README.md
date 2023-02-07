@@ -12,10 +12,9 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-### Embedded
+### Embedded SDK
 
-The Embedded SDK is a holistic SDK solution offering the entire experience embedded in your product. Users will not need
-to download the Beyond Identity Authenticator.
+Goodbye, passwords! The Beyond Identity SDK for Flutter is a wrapper around our Native Embedded SDKs ([Android](https://github.com/gobeyondidentity/bi-sdk-android) and [iOS](https://github.com/gobeyondidentity/bi-sdk-swift)), which allow you to embed the Passwordless experience into your product. Users will not need to download the Beyond Identity Authenticator. This SDK supports OIDC and OAuth2.
 
 ## Installation
 
@@ -29,10 +28,6 @@ dependencies:
 ```
 
 and run an implicit `flutter pub get`
-
-## Usage
-
-Check out the [documentation](https://developer.beyondidentity.com) for more information.
 
 ### Update Android
 
@@ -55,22 +50,25 @@ In your `ios/Podfile` set:
 platform :ios, '13.0'
 ```
 
+## Usage
+
+Check out the [Developer Documentation](https://developer.beyondidentity.com) and the [SDK API Documentation](https://gobeyondidentity.github.io/bi-sdk-flutter/) for more information.
+
 ### Setup
 
 First, before calling the Embedded functions, make sure to initialize the SDK.
 
-<!-- javascript is used here since flutter is not available and dart doesn't highlight at all. -->
-```javascript
+```dart
 import 'package:bi_sdk_flutter/embeddedsdk.dart';
 
-Embeddedsdk.initialize(
-    String biometricPrompt,
-    bool enableLogging,
+EmbeddedSdk.initialize(
+    String biometricAskPrompt,
     List<String>? allowedDomains, /* Optional */
+    Future<Function>? logger, /* Optional */
 )
 ```
 
-### Example app
+## Example App
 To run the Android example app
 1. Run `flutter pub get` from the root of the repo
 2. Run `flutter run` from the example directory or use Android Studio. Make sure an Android device is running.

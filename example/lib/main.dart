@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:bi_sdk_flutter/embeddedsdk.dart';
-import 'package:bi_sdk_flutter/simple_dialog.dart';
+import 'package:bi_sdk_flutter/print.dart';
 import 'package:embeddedsdk_example/config.dart';
 import 'package:embeddedsdk_example/extensions.dart';
+import 'package:embeddedsdk_example/simple_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_auth/flutter_web_auth.dart';
@@ -16,13 +17,13 @@ import 'package:url_launcher/url_launcher.dart';
 class LoggingInterceptor implements InterceptorContract {
   @override
   Future<RequestData> interceptRequest({required RequestData data}) async {
-    print(data.toString());
+    biDebugPrint(data.toString());
     return data;
   }
 
   @override
   Future<ResponseData> interceptResponse({required ResponseData data}) async {
-    print(data.toString());
+    biDebugPrint(data.toString());
     return data;
   }
 }
@@ -39,8 +40,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final bool _enableLogging = true;
-
   final _registerUserController = TextEditingController();
   String _registerUserText = '';
   String _registerUserResultText = '';
@@ -71,16 +70,17 @@ class _MyAppState extends State<MyApp> {
   String _authUrlText = '';
   String _authUrlResultText = '';
 
-  String _getCredentialsResultText = '';
+  String _getPasskeysResultText = '';
 
-  final _deleteCredentialController = TextEditingController();
-  String _deleteCredentialText = '';
-  String _deleteCredentialResultText = '';
+  final _deletePasskeyController = TextEditingController();
+  String _deletePasskeyText = '';
+  String _deletePasskeyResultText = '';
 
   @override
   void initState() {
     super.initState();
-    Embeddedsdk.initialize("Gimmie your biometrics", _enableLogging);
+    EmbeddedSdk.initialize("Gimmie your biometrics",
+        logger: EmbeddedSdk.enableLogger());
   }
 
   @override
@@ -114,22 +114,22 @@ class _MyAppState extends State<MyApp> {
         registerUserResultText = jsonPrettyPrint(response.body);
       } else {
         try {
-          BindCredentialResponse bindCredentialResponse =
-              await Embeddedsdk.bindCredential(
+          BindPasskeyResponse bindPasskeyResponse =
+              await EmbeddedSdk.bindPasskey(
                   responseBody['credential_binding_link']);
           registerUserText = '';
-          registerUserResultText = jsonPrettyPrint(bindCredentialResponse.toString());
+          registerUserResultText = jsonPrettyPrint(bindPasskeyResponse.toString());
         } on PlatformException catch (e) {
           errorPrint(e);
-          registerUserResultText = "could not register credential $e";
+          registerUserResultText = "could not register passkey $e";
         } catch (e) {
           errorPrint(e);
-          registerUserResultText = "${e.runtimeType} registering credential = $e";
+          registerUserResultText = "${e.runtimeType} registering passkey = $e";
         }
       }
     } catch (e) {
       errorPrint(e);
-      registerUserResultText = "${e.runtimeType} registering credential = $e";
+      registerUserResultText = "${e.runtimeType} registering passkey = $e";
     } finally {
       client.close();
     }
@@ -166,22 +166,22 @@ class _MyAppState extends State<MyApp> {
         recoverUserResultText = jsonPrettyPrint(response.body);
       } else {
         try {
-          BindCredentialResponse bindCredentialResponse =
-              await Embeddedsdk.bindCredential(
+          BindPasskeyResponse bindPasskeyResponse =
+              await EmbeddedSdk.bindPasskey(
                   responseBody['credential_binding_link']);
           recoverUserText = '';
-          recoverUserResultText = jsonPrettyPrint(bindCredentialResponse.toString());
+          recoverUserResultText = jsonPrettyPrint(bindPasskeyResponse.toString());
         } on PlatformException catch (e) {
           errorPrint(e);
-          recoverUserResultText = "could not recover credential $e";
+          recoverUserResultText = "could not recover passkey $e";
         } catch (e) {
           errorPrint(e);
-          recoverUserResultText = "${e.runtimeType} recovering credential = $e";
+          recoverUserResultText = "${e.runtimeType} recovering passkey = $e";
         }
       }
     } catch (e) {
       errorPrint(e);
-      recoverUserResultText = "${e.runtimeType} recovering credential = $e";
+      recoverUserResultText = "${e.runtimeType} recovering passkey = $e";
     } finally {
       client.close();
     }
@@ -198,16 +198,16 @@ class _MyAppState extends State<MyApp> {
     String bindResultText = '';
 
     try {
-      BindCredentialResponse bindCredentialResponse =
-          await Embeddedsdk.bindCredential(_bindController.text);
+      BindPasskeyResponse bindPasskeyResponse =
+          await EmbeddedSdk.bindPasskey(_bindController.text);
       bindText = '';
-      bindResultText = jsonPrettyPrint(bindCredentialResponse.toString());
+      bindResultText = jsonPrettyPrint(bindPasskeyResponse.toString());
     } on PlatformException catch (e) {
       errorPrint(e);
-      bindResultText = "could not bind credential $e";
+      bindResultText = "could not bind passkey $e";
     } catch (e) {
       errorPrint(e);
-      bindResultText = "${e.runtimeType} binding credential = $e";
+      bindResultText = "${e.runtimeType} binding passkey = $e";
     }
 
     if (!mounted) return;
@@ -218,24 +218,24 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> onSelectCredential(Function(String) onSelectedCredential) async {
+  Future<void> onSelectPasskey(Function(String) onSelectedPasskey) async {
     try {
-      List<Credential> credentials = await Embeddedsdk.getCredentials();
+      List<Passkey> passkeys = await EmbeddedSdk.getPasskeys();
 
-      if (credentials.isEmpty) {
-        onSelectedCredential("");
-      } else if (credentials.length == 1) {
-        onSelectedCredential(credentials.first.id);
+      if (passkeys.isEmpty) {
+        onSelectedPasskey("");
+      } else if (passkeys.length == 1) {
+        onSelectedPasskey(passkeys.first.id);
       } else {
         List<Widget> widgets = List.empty(growable: true);
 
-        for (Credential credential in credentials) {
+        for (Passkey passkey in passkeys) {
           widgets.add(SimpleDialogItem(
-            key: Key(credential.id),
-            text: credential.identity.displayName,
+            key: Key(passkey.id),
+            text: passkey.identity.displayName,
             onPressed: () {
-              Navigator.pop(context, credential.id);
-              onSelectedCredential(credential.id);
+              Navigator.pop(context, passkey.id);
+              onSelectedPasskey(passkey.id);
             },
           ));
         }
@@ -262,47 +262,100 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _authenticateBeyondIdentity() async {
-    onSelectCredential((credentialId) async {
-      String authResultText = '';
-
-      try {
-        // Present the dialog to the user
-        var result = await FlutterWebAuth.authenticate(
-          url: "https://auth-us.beyondidentity.com/v1/tenants/00012da391ea206d/realms/862e4b72cfdce072/applications/3d869893-08b1-46ca-99c7-3c12226edf1b/authorize"
-              "?scope=openid"
-              "&response_type=code"
-              "&redirect_uri=${Uri.encodeComponent("acme://")}"
-              "&client_id=JvV5DbxFZbana_tMTAPTs-gY",
-          callbackUrlScheme: "acme",
-        );
-
-        // Extract token from resulting url
-        var authenticateResponse =
-            await Embeddedsdk.authenticate(result, credentialId);
-        authResultText = jsonPrettyPrint(authenticateResponse.toString());
-      } on PlatformException catch (e) {
-        errorPrint(e);
-        authResultText = "could not authenticate $e";
-      } catch (e) {
-        errorPrint(e);
-        authResultText = "${e.runtimeType} authenticating = $e";
-      }
-
+    updateAuthResultText(authResultText) async {
       if (!mounted) return;
 
       setState(() {
         _authBeyondIdentityResultText = authResultText;
       });
-    });
+    }
+
+    try {
+      onSelectPasskey((passkeyId) async {
+        final pkcePair = PkcePair.generate();
+
+        http.Client client =
+            InterceptedClient.build(interceptors: [LoggingInterceptor()]);
+
+        // Present the dialog to the user
+        var response = await client.get(
+          Uri.parse(
+            "https://auth-us.beyondidentity.com/v1/tenants/00012da391ea206d/realms/862e4b72cfdce072/applications/a8c0aa60-38e4-42b6-bd52-ef64aba5478b/authorize"
+            "?state=state"
+            "&scope=openid"
+            "&response_type=code"
+            "&redirect_uri=${Uri.encodeComponent("acme://")}"
+            "&code_challenge_method=S256"
+            "&code_challenge=${pkcePair.codeChallenge}"
+            "&client_id=KhSWSmfhZ6xCMz9yw7DpJcv5",
+          ),
+        );
+
+        Map responseBody = json.decode(response.body);
+
+        if (!responseBody.containsKey('authenticate_url')) {
+          updateAuthResultText(jsonPrettyPrint(response.body));
+        } else {
+          _embeddedSdkAuthenticate(
+            responseBody['authenticate_url'],
+            passkeyId,
+            updateAuthResultText,
+            (redirectResponse) async {
+              http.Client client =
+                  InterceptedClient.build(interceptors: [LoggingInterceptor()]);
+
+              try {
+                var response = await client.post(
+                  Uri.parse(
+                      "https://auth-us.beyondidentity.com/v1/tenants/00012da391ea206d/realms/862e4b72cfdce072/applications/a8c0aa60-38e4-42b6-bd52-ef64aba5478b/token"),
+                  headers: <String, String>{
+                    'Content-Type':
+                        'application/x-www-form-urlencoded; charset=UTF-8',
+                  },
+                  body: {
+                    'client_id': 'KhSWSmfhZ6xCMz9yw7DpJcv5',
+                    'code': Uri.parse(redirectResponse).queryParameters['code'],
+                    'code_verifier': pkcePair.codeVerifier,
+                    'grant_type': 'authorization_code',
+                    'redirect_uri': 'acme://',
+                    'state': 'state',
+                  },
+                );
+
+                updateAuthResultText(jsonPrettyPrint(response.body));
+              } catch (e) {
+                errorPrint(e);
+                updateAuthResultText("${e.runtimeType} authenticating = $e");
+              } finally {
+                client.close();
+              }
+            },
+            shouldReturnNonRedirectUrl: false,
+          );
+        }
+      });
+    } on PlatformException catch (e) {
+      errorPrint(e);
+      updateAuthResultText("could not authenticate $e");
+    } catch (e) {
+      errorPrint(e);
+      updateAuthResultText("${e.runtimeType} authenticating = $e");
+    }
   }
 
   Future<void> _authenticateOkta() async {
-    onSelectCredential((credentialId) async {
-      String authResultText = '';
+    updateAuthResultText(authResultText) async {
+      if (!mounted) return;
 
-      final pkcePair = PkcePair.generate();
+      setState(() {
+        _authOktaResultText = authResultText;
+      });
+    }
 
-      try {
+    try {
+      onSelectPasskey((passkeyId) async {
+        final pkcePair = PkcePair.generate();
+
         // Present the dialog to the user
         var oktaResult = await FlutterWebAuth.authenticate(
           url: "https://dev-43409302.okta.com/oauth2/v1/authorize"
@@ -318,70 +371,63 @@ class _MyAppState extends State<MyApp> {
           callbackUrlScheme: "acme",
         );
 
-        if (await Embeddedsdk.isAuthenticateUrl(oktaResult)) {
-          // Extract token from resulting url
-          var authenticateResponse =
-              await Embeddedsdk.authenticate(oktaResult, credentialId);
-          authResultText = jsonPrettyPrint(authenticateResponse.toString());
+        _embeddedSdkAuthenticate(
+          oktaResult,
+          passkeyId,
+          updateAuthResultText,
+          (redirectResponse) async {
+            http.Client client =
+                InterceptedClient.build(interceptors: [LoggingInterceptor()]);
 
-          // Present the dialog to the user
-          oktaResult = await FlutterWebAuth.authenticate(
-            url: authenticateResponse.redirectUrl,
-            callbackUrlScheme: "acme",
-          );
-        }
+            try {
+              var response = await client.post(
+                Uri.parse("https://dev-43409302.okta.com/oauth2/v1/token"),
+                headers: <String, String>{
+                  'Content-Type':
+                      'application/x-www-form-urlencoded; charset=UTF-8',
+                },
+                body: {
+                  'client_id': '0oa5kipb8rdo4WCkf5d7',
+                  'code': Uri.parse(redirectResponse).queryParameters['code'],
+                  'code_verifier': pkcePair.codeVerifier,
+                  'grant_type': 'authorization_code',
+                  'redirect_uri': 'acme://okta',
+                },
+              );
 
-        // Extract token from resulting url
-        final code = Uri.parse(oktaResult).queryParameters['code'];
-
-        http.Client client =
-            InterceptedClient.build(interceptors: [LoggingInterceptor()]);
-
-        try {
-          var response = await client.post(
-            Uri.parse("https://dev-43409302.okta.com/oauth2/v1/token"),
-            headers: <String, String>{
-              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            },
-            body: {
-              'client_id': '0oa5kipb8rdo4WCkf5d7',
-              'code': code,
-              'code_verifier': pkcePair.codeVerifier,
-              'grant_type': 'authorization_code',
-              'redirect_uri': 'acme://okta',
-            },
-          );
-
-          authResultText = jsonPrettyPrint(response.body);
-        } catch (e) {
-          errorPrint(e);
-          authResultText = "${e.runtimeType} authenticating = $e";
-        } finally {
-          client.close();
-        }
-      } on PlatformException catch (e) {
-        errorPrint(e);
-        authResultText = "could not authenticate $e";
-      } catch (e) {
-        errorPrint(e);
-        authResultText = "${e.runtimeType} authenticating = $e";
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        _authOktaResultText = authResultText;
+              updateAuthResultText(jsonPrettyPrint(response.body));
+            } catch (e) {
+              errorPrint(e);
+              updateAuthResultText("${e.runtimeType} authenticating = $e");
+            } finally {
+              client.close();
+            }
+          },
+          shouldReturnNonAuthenticateUrl: true,
+        );
       });
-    });
+    } on PlatformException catch (e) {
+      errorPrint(e);
+      updateAuthResultText("could not authenticate $e");
+    } catch (e) {
+      errorPrint(e);
+      updateAuthResultText("${e.runtimeType} authenticating = $e");
+    }
   }
 
   Future<void> _authenticateAuth0() async {
-    onSelectCredential((credentialId) async {
-      String authResultText = '';
+    updateAuthResultText(authResultText) async {
+      if (!mounted) return;
 
-      final pkcePair = PkcePair.generate();
+      setState(() {
+        _authAuth0ResultText = authResultText;
+      });
+    }
 
-      try {
+    try {
+      onSelectPasskey((passkeyId) async {
+        final pkcePair = PkcePair.generate();
+
         // Present the dialog to the user
         var auth0Result = await FlutterWebAuth.authenticate(
           url: "https://dev-pt10fbkg.us.auth0.com/authorize"
@@ -397,104 +443,140 @@ class _MyAppState extends State<MyApp> {
           callbackUrlScheme: "acme",
         );
 
-        if (await Embeddedsdk.isAuthenticateUrl(auth0Result)) {
-          // Extract token from resulting url
-          var authenticateResponse =
-              await Embeddedsdk.authenticate(auth0Result, credentialId);
-          authResultText = authenticateResponse.toString();
+        _embeddedSdkAuthenticate(
+          auth0Result,
+          passkeyId,
+          updateAuthResultText,
+          (redirectResponse) async {
+            http.Client client =
+                InterceptedClient.build(interceptors: [LoggingInterceptor()]);
 
-          // Present the dialog to the user
-          auth0Result = await FlutterWebAuth.authenticate(
+            try {
+              var response = await client.post(
+                Uri.parse("https://dev-pt10fbkg.us.auth0.com/oauth/token"),
+                headers: <String, String>{
+                  'Content-Type':
+                      'application/x-www-form-urlencoded; charset=UTF-8',
+                },
+                body: {
+                  'grant_type': 'authorization_code',
+                  'client_id': 'q1cubQfeZWnajq5YkeZVD3NauRqU4vNs',
+                  'code': Uri.parse(redirectResponse).queryParameters['code'],
+                  'code_verifier': pkcePair.codeVerifier,
+                  'redirect_uri': 'acme://auth0',
+                },
+              );
+
+              updateAuthResultText(jsonPrettyPrint(response.body));
+            } catch (e) {
+              errorPrint(e);
+              updateAuthResultText("${e.runtimeType} authenticating = $e");
+            } finally {
+              client.close();
+            }
+          },
+        );
+      });
+    } on PlatformException catch (e) {
+      errorPrint(e);
+      updateAuthResultText("could not authenticate $e");
+    } catch (e) {
+      errorPrint(e);
+      updateAuthResultText("${e.runtimeType} authenticating = $e");
+    }
+  }
+
+  /// Function to standardize behavior of authentication.
+  ///
+  /// [url] url parameter for [EmbeddedSdk.authenticate].
+  /// [passkeyId] passkeyId parameter for [EmbeddedSdk.authenticate].
+  /// [onAuthenticateResponse] callback to handle response from [EmbeddedSdk.authenticate].
+  /// [onRedirectResponse] callback to handle url from [AuthenticateResponse].
+  /// [shouldReturnNonRedirectUrl] Optional flag to return redirectUrl or
+  /// the url from following the redirectUrl. Example: Beyond Identity.
+  /// [shouldReturnNonAuthenticateUrl] Optional flag to return original url if
+  /// it is not an authenticate url. Example: Okta.
+  Future<void> _embeddedSdkAuthenticate(
+    String url,
+    String passkeyId,
+    Function(String) onAuthenticateResponse,
+    Function(String) onRedirectResponse, {
+    bool shouldReturnNonRedirectUrl = true,
+    bool shouldReturnNonAuthenticateUrl = false,
+  }) async {
+    try {
+      if (await EmbeddedSdk.isAuthenticateUrl(url)) {
+        // Extract token from resulting url
+        var authenticateResponse =
+            await EmbeddedSdk.authenticate(url, passkeyId);
+        onAuthenticateResponse(
+          jsonPrettyPrint(authenticateResponse.toString()),
+        );
+
+        // Present the dialog to the user
+        if (shouldReturnNonRedirectUrl) {
+          onRedirectResponse(await FlutterWebAuth.authenticate(
             url: authenticateResponse.redirectUrl,
             callbackUrlScheme: "acme",
-          );
+          ));
+        } else {
+          onRedirectResponse(authenticateResponse.redirectUrl);
         }
-
-        // Extract token from resulting url
-        final code = Uri.parse(auth0Result).queryParameters['code'];
-
-        http.Client client =
-            InterceptedClient.build(interceptors: [LoggingInterceptor()]);
-
-        try {
-          var response = await client.post(
-            Uri.parse("https://dev-pt10fbkg.us.auth0.com/oauth/token"),
-            headers: <String, String>{
-              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            },
-            body: {
-              'grant_type': 'authorization_code',
-              'client_id': 'q1cubQfeZWnajq5YkeZVD3NauRqU4vNs',
-              'code': code,
-              'code_verifier': pkcePair.codeVerifier,
-              'redirect_uri': 'acme://auth0',
-            },
-          );
-
-          authResultText = jsonPrettyPrint(response.body);
-        } catch (e) {
-          errorPrint(e);
-          authResultText = "${e.runtimeType} authenticating = $e";
-        } finally {
-          client.close();
+      } else {
+        if (shouldReturnNonAuthenticateUrl) {
+          onRedirectResponse(url);
         }
-      } on PlatformException catch (e) {
-        errorPrint(e);
-        authResultText = "could not authenticate $e";
-      } catch (e) {
-        errorPrint(e);
-        authResultText = "${e.runtimeType} authenticating = $e";
       }
-
-      if (!mounted) return;
-
-      setState(() {
-        _authAuth0ResultText = authResultText;
-      });
-    });
+    } on PlatformException catch (e) {
+      errorPrint(e);
+      onAuthenticateResponse("could not authenticate $e");
+    } catch (e) {
+      errorPrint(e);
+      onAuthenticateResponse("${e.runtimeType} authenticating = $e");
+    }
   }
 
   Future<void> _authenticate() async {
-    onSelectCredential((credentialId) async {
-      String authText = _authText;
-      String authResultText = '';
+    String authText = _authText;
+    String authResultText = '';
 
-      try {
+    try {
+      onSelectPasskey((passkeyId) async {
         AuthenticateResponse authenticateResponse =
-            await Embeddedsdk.authenticate(_authController.text, credentialId);
+            await EmbeddedSdk.authenticate(_authController.text, passkeyId);
         authText = '';
         authResultText = jsonPrettyPrint(authenticateResponse.toString());
-      } on PlatformException catch (e) {
-        errorPrint(e);
-        authResultText = "could not authenticate $e";
-      } catch (e) {
-        errorPrint(e);
-        authResultText = "${e.runtimeType} authenticating = $e";
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        _authText = authText;
-        _authResultText = authResultText;
       });
+    } on PlatformException catch (e) {
+      errorPrint(e);
+      authResultText = "could not authenticate $e";
+    } catch (e) {
+      errorPrint(e);
+      authResultText = "${e.runtimeType} authenticating = $e";
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _authText = authText;
+      _authResultText = authResultText;
     });
   }
 
-  Future<void> _getCredentials() async {
-    String getCredentialsResultText = '';
+  Future<void> _getPasskeys() async {
+    String getPasskeysResultText = '';
 
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      List<Credential> credentials = await Embeddedsdk.getCredentials();
-      getCredentialsResultText = "Credentials = $credentials";
+      List<Passkey> passkeys = await EmbeddedSdk.getPasskeys();
+      getPasskeysResultText = "Passkeys = ${jsonPrettyPrintPasskeys(passkeys)}";
     } on PlatformException catch (e) {
       errorPrint(e);
-      getCredentialsResultText = "could not get credentials $e";
+      getPasskeysResultText = "could not get passkeys $e";
     } catch (e) {
       errorPrint(e);
-      getCredentialsResultText = "${e.runtimeType} getting credentials = $e";
+      getPasskeysResultText = "${e.runtimeType} getting passkeys = $e";
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -503,43 +585,43 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      _getCredentialsResultText = getCredentialsResultText;
+      _getPasskeysResultText = getPasskeysResultText;
     });
   }
 
-  Future<void> _deleteCredential() async {
-    String deleteCredentialText = _deleteCredentialText;
-    String deleteCredentialResultText = '';
+  Future<void> _deletePasskey() async {
+    String deletePasskeyText = _deletePasskeyText;
+    String deletePasskeyResultText = '';
 
     try {
-      if (_deleteCredentialController.text.isNotEmpty) {
-        await Embeddedsdk.deleteCredential(_deleteCredentialController.text);
-        deleteCredentialText = '';
-        deleteCredentialResultText = "Deleted credential ${_deleteCredentialController.text}";
+      if (_deletePasskeyController.text.isNotEmpty) {
+        await EmbeddedSdk.deletePasskey(_deletePasskeyController.text);
+        deletePasskeyText = '';
+        deletePasskeyResultText = "Deleted passkey ${_deletePasskeyController.text}";
       } else {
-        List<Credential> credentials = await Embeddedsdk.getCredentials();
-        if (credentials.isNotEmpty) {
-          await Embeddedsdk.deleteCredential(credentials.first.id);
-          deleteCredentialText = '';
-          deleteCredentialResultText = "Deleted credential ${credentials.first.id}";
+        List<Passkey> passkeys = await EmbeddedSdk.getPasskeys();
+        if (passkeys.isNotEmpty) {
+          await EmbeddedSdk.deletePasskey(passkeys.first.id);
+          deletePasskeyText = '';
+          deletePasskeyResultText = "Deleted passkey ${passkeys.first.id}";
         } else {
-          deleteCredentialText = '';
-          deleteCredentialResultText = "No credentials to delete";
+          deletePasskeyText = '';
+          deletePasskeyResultText = "No passkeys to delete";
         }
       }
     } on PlatformException catch (e) {
       errorPrint(e);
-      deleteCredentialResultText = "could not delete credential $e";
+      deletePasskeyResultText = "could not delete passkey $e";
     } catch (e) {
       errorPrint(e);
-      deleteCredentialResultText = "${e.runtimeType} deleting credential = $e";
+      deletePasskeyResultText = "${e.runtimeType} deleting passkey = $e";
     }
 
     if (!mounted) return;
 
     setState(() {
-      _deleteCredentialText = deleteCredentialText;
-      _deleteCredentialResultText = deleteCredentialResultText;
+      _deletePasskeyText = deletePasskeyText;
+      _deletePasskeyResultText = deletePasskeyResultText;
     });
   }
 
@@ -549,12 +631,12 @@ class _MyAppState extends State<MyApp> {
 
     try {
       bool isBindUrl =
-          await Embeddedsdk.isBindCredentialUrl(_bindUrlController.text);
+          await EmbeddedSdk.isBindPasskeyUrl(_bindUrlController.text);
       bindUrlText = '';
       bindUrlResultText = isBindUrl.toString();
     } on PlatformException catch (e) {
       errorPrint(e);
-      bindUrlResultText = "could not validate bind credential url $e";
+      bindUrlResultText = "could not validate bind passkey url $e";
     } catch (e) {
       errorPrint(e);
       bindUrlResultText = "${e.runtimeType} validating = $e";
@@ -574,7 +656,7 @@ class _MyAppState extends State<MyApp> {
 
     try {
       bool isAuthUrl =
-          await Embeddedsdk.isAuthenticateUrl(_authUrlController.text);
+          await EmbeddedSdk.isAuthenticateUrl(_authUrlController.text);
       authUrlText = '';
       authUrlResultText = isAuthUrl.toString();
     } on PlatformException catch (e) {
@@ -603,7 +685,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _launchUrl(String url) async {
     var uri = Uri.parse(url);
-    if (!await launchUrl(uri)) {
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       throw 'Could not launch $uri';
     }
   }
@@ -616,8 +698,31 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  String jsonPrettyPrintPasskey(Passkey passkey) {
+    return jsonPrettyPrint(passkey.toJson());
+  }
+
+  String jsonPrettyPrintPasskeys(List<Passkey> passkeys) {
+    try {
+      var string = "";
+      string += "[";
+      for (int i = 0; i < passkeys.length; i++) {
+        Passkey passkey = passkeys[i];
+        if (i == passkeys.length - 1) {
+          string += passkey.toJson();
+        } else {
+          string += "${passkey.toJson()},";
+        }
+      }
+      string += "]";
+      return jsonPrettyPrint(string);
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
   void errorPrint(Object e) {
-    debugPrint("${e.runtimeType} = $e");
+    biDebugPrint("${e.runtimeType} = $e");
   }
 
   ///////////////////////////////////////////////////
@@ -644,24 +749,24 @@ class _MyAppState extends State<MyApp> {
                 ]),
                 _card([
                   _title("\nGet Started"),
-                  _subTitle("Bind Credential"),
-                  _description("To get started with using our embedded SDK sample app, enter any username to bind a credential to this device."),
-                  _buttonInputTextGroup("Bind Credential", "Username", _registerUserController, _registerDemoUser, _registerUserText),
+                  _subTitle("Bind Passkey"),
+                  _description("To get started with using our embedded SDK sample app, enter any username to bind a passkey to this device."),
+                  _buttonInputTextGroup("Bind Passkey", "Username", _registerUserController, _registerDemoUser, _registerUserText),
                   Text(_registerUserResultText),
-                  _subTitle("Recover Credential"),
-                  _description("If you have an account with a credential you can’t access anymore, enter your username to recover your account and bind a credential to this device."),
-                  _buttonInputTextGroup("Recover Credential", "Username", _recoverUserController, _recoverDemoUser, _recoverUserText),
+                  _subTitle("Recover Passkey"),
+                  _description("If you have an account with a passkey you can’t access anymore, enter your username to recover your account and bind a passkey to this device."),
+                  _buttonInputTextGroup("Recover Passkey", "Username", _recoverUserController, _recoverDemoUser, _recoverUserText),
                   Text(_recoverUserResultText),
                 ]),
                 _card([
-                  _title("\nBind Credential"),
-                  _description("Paste the Bind Credential URL you received in your email or generated through the API in order to bind a credential."),
-                  _buttonInputTextGroup("Bind Credential", "Bind Credential URL", _bindController, _bind, _bindText),
+                  _title("\nBind Passkey"),
+                  _description("Paste the Bind Passkey URL you received in your email or generated through the API in order to bind a passkey."),
+                  _buttonInputTextGroup("Bind Passkey", "Bind Passkey URL", _bindController, _bind, _bindText),
                   Text(_bindResultText),
                 ]),
                 _card([
                   _title("\nAuthenticate"),
-                  _description("Authenticate against a credential bound to this device. If more than one credential is present, you must select a credential during authentication."),
+                  _description("Authenticate against a passkey bound to this device. If more than one passkey is present, you must select a passkey during authentication."),
                   _subTitle("Authenticate with Beyond Identity"),
                   _description("Try authenticating with Beyond Identity as the primary IdP."),
                   _buttonTextGroup("Authenticate with Beyond Identity", _authenticateBeyondIdentity, _authBeyondIdentityResultText),
@@ -674,25 +779,25 @@ class _MyAppState extends State<MyApp> {
                 ]),
                 _card([
                   _title("\nAuthenticate"),
-                  _description("Authenticate against a credential bound to this device. If more than one credential is present, you must select a credential during authentication."),
+                  _description("Authenticate against a passkey bound to this device. If more than one passkey is present, you must select a passkey during authentication."),
                   _buttonInputTextGroup("Authenticate", "Authenticate URL", _authController, _authenticate, _authText),
                   Text(_authResultText),
                 ]),
                 _card([
-                  _title("\nCredential Management"),
-                  _subTitle("View Credential"),
-                  _description("View details of your Credential, such as date created, identity and other information related to your device."),
-                  _buttonTextGroup("Get Credentials", _getCredentials, _getCredentialsResultText),
-                  _subTitle("Delete Credential"),
-                  _description("Delete your credential on your device."),
-                  _buttonInputTextGroup("Delete Credential", "Credential ID", _deleteCredentialController, _deleteCredential, _deleteCredentialText),
-                  Text(_deleteCredentialResultText),
+                  _title("\nPasskey Management"),
+                  _subTitle("View Passkey"),
+                  _description("View details of your passkey, such as date created, identity and other information related to your device."),
+                  _buttonTextGroup("Get Passkeys", _getPasskeys, _getPasskeysResultText),
+                  _subTitle("Delete Passkey"),
+                  _description("Delete your passkey on your device."),
+                  _buttonInputTextGroup("Delete Passkey", "Passkey ID", _deletePasskeyController, _deletePasskey, _deletePasskeyText),
+                  Text(_deletePasskeyResultText),
                 ]),
                 _card([
                   _title("\nURL Validation"),
-                  _subTitle("Bind Credential URL"),
-                  _description("Paste a Url here to validate if it's a bind credential url."),
-                  _buttonInputTextGroup("Validate URL", "Bind Credential URL", _bindUrlController, _bindUrl, _bindUrlText),
+                  _subTitle("Bind Passkey URL"),
+                  _description("Paste a Url here to validate if it's a bind passkey url."),
+                  _buttonInputTextGroup("Validate URL", "Bind Passkey URL", _bindUrlController, _bindUrl, _bindUrlText),
                   Text(_bindUrlResultText),
                   _subTitle("Authenticate URL"),
                   _description("Paste a Url here to validate if it's an authenticate url."),

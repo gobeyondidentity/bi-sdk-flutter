@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name              = 'bi_sdk_flutter'
-  s.version           = '1.0.1'
+  s.version           = '2.0.0'
   s.summary           = 'Passwordless identities for workforces and customers'
   s.homepage          = 'https://beyondidentity.com'
   s.license           = { :file => '../LICENSE' }
@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.swift_version     = '5.5'
 
   s.dependency 'Flutter'
-  s.dependency 'BeyondIdentityEmbedded', '1.0.4'
+  s.dependency 'BeyondIdentityEmbedded', '2.0.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

@@ -6,8 +6,8 @@
 
 #import "GeneratedPluginRegistrant.h"
 
-#if __has_include(<bi_sdk_flutter/EmbeddedsdkPlugin.h>)
-#import <bi_sdk_flutter/EmbeddedsdkPlugin.h>
+#if __has_include(<bi_sdk_flutter/EmbeddedSdkPlugin.h>)
+#import <bi_sdk_flutter/EmbeddedSdkPlugin.h>
 #else
 @import bi_sdk_flutter;
 #endif
@@ -33,7 +33,7 @@
 @implementation GeneratedPluginRegistrant
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
-  [EmbeddedsdkPlugin registerWithRegistrar:[registry registrarForPlugin:@"EmbeddedsdkPlugin"]];
+  [EmbeddedSdkPlugin registerWithRegistrar:[registry registrarForPlugin:@"EmbeddedSdkPlugin"]];
   [FlutterWebAuthPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterWebAuthPlugin"]];
   [UniLinksPlugin registerWithRegistrar:[registry registrarForPlugin:@"UniLinksPlugin"]];
   [FLTURLLauncherPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTURLLauncherPlugin"]];

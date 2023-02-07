@@ -3,54 +3,63 @@ import Flutter
 import UIKit
 import os
 
+let embeddedSdkMethodChannel = "embeddedsdk_method_channel"
+let embeddedSdkEventChannel = "embeddedsdk_event_channel"
+
 let embeddedSdkError = "FlutterEmbeddedSdkError"
 
-public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
-    
+public class SwiftEmbeddedSdkPlugin: NSObject, FlutterPlugin {
+
+    var channel: FlutterMethodChannel? = nil
     var isEmbeddedSdkInitialized = false
     var logger: ((OSLogType, String) -> Void)? = nil
-    
+
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "embeddedsdk_method_channel", binaryMessenger: registrar.messenger())
-        let exportEventChannel = FlutterEventChannel(name: "embeddedsdk_export_event_channel", binaryMessenger: registrar.messenger())
-        let instance = SwiftEmbeddedsdkPlugin()
-        registrar.addMethodCallDelegate(instance, channel: channel)
-        exportEventChannel.setStreamHandler(CredentialExportStreamHandler())
+        let instance = SwiftEmbeddedSdkPlugin()
+        instance.channel = FlutterMethodChannel(name: embeddedSdkMethodChannel, binaryMessenger: registrar.messenger())
+        registrar.addMethodCallDelegate(instance, channel: instance.channel!)
     }
-    
+
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if (!isEmbeddedSdkInitialized && call.method != "initialize") {
             result(FlutterError(code: embeddedSdkError, message: "EmbeddedSdk not initialized", details: nil))
         }
-        
+
         switch call.method {
         case "initialize":
             guard let args = call.arguments else {
                 result(FlutterError(code: embeddedSdkError, message: "Could not get initialize arguments", details: nil))
                 return
             }
-            
+
             if let initArgs = args as? [String: Any],
                let allowedDomains = initArgs["allowedDomains"] as? [String],
-               let biometricPrompt = initArgs["biometricPrompt"] as? String,
-               let enableLogging = initArgs["enableLogging"] as? Bool {
-                
-                if (enableLogging) {
+               let biometricAskPrompt = initArgs["biometricAskPrompt"] as? String,
+               let enableLogger = initArgs["enableLogger"] as? Bool {
+
+                if (enableLogger) {
                     logger = { (_, message) in
-                        print(message)
+                        DispatchQueue.main.async(execute: {
+                            self.channel?.invokeMethod(
+                                "print",
+                                arguments: [
+                                    "message": message,
+                                ]
+                            )
+                        })
                     }
                 }
-                
-                Embedded.initialize(allowedDomains: allowedDomains, biometricAskPrompt: biometricPrompt, logger: logger, callback: { _ in })
-                
+
+                Embedded.initialize(allowedDomains: allowedDomains, biometricAskPrompt: biometricAskPrompt, logger: logger, callback: { _ in })
+
                 isEmbeddedSdkInitialized = true
             } else {
                 result(FlutterError(code: embeddedSdkError, message: "Could not get initialize arguments", details: nil))
             }
 
-        case "bindCredential":
+        case "bindPasskey":
             guard let args = call.arguments else {
-                result(FlutterError(code: embeddedSdkError, message: "Could not get bindCredential arguments", details: nil))
+                result(FlutterError(code: embeddedSdkError, message: "Could not get bindPasskey arguments", details: nil))
                 return
             }
 
@@ -60,16 +69,16 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
                     result(FlutterError(code: embeddedSdkError, message: "\(urlArg) is not a valid url", details: nil))
                     return
                 }
-                Embedded.shared.bindCredential(url: url) { bindCredentialResult in
-                    switch bindCredentialResult {
-                    case let .success(bindCredentialResponse):
-                        result(makeBindCredentialDictionary(bindCredentialResponse))
+                Embedded.shared.bindPasskey(url: url) { bindPasskeyResult in
+                    switch bindPasskeyResult {
+                    case let .success(bindPasskeyResponse):
+                        result(makeBindPasskeyDictionary(bindPasskeyResponse))
                     case let .failure(error):
                         result(FlutterError(code: embeddedSdkError, message: error.localizedDescription, details: nil))
                     }
                 }
             } else {
-                result(FlutterError(code: embeddedSdkError, message: "Could not get bindCredential arguments", details: nil))
+                result(FlutterError(code: embeddedSdkError, message: "Could not get bindPasskey arguments", details: nil))
             }
 
         case "authenticate":
@@ -84,7 +93,7 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
                     result(FlutterError(code: embeddedSdkError, message: "\(urlArg) is not a valid url", details: nil))
                     return
                 }
-                Embedded.shared.authenticate(url: url, credentialID: CredentialID(authArgs["credentialId"] as? String ?? "")) { authenticateResult in
+                Embedded.shared.authenticate(url: url, id: Passkey.Id(authArgs["passkeyId"] as? String ?? "")) { authenticateResult in
                     switch authenticateResult {
                     case let .success(authenticateResponse):
                         result(makeAuthenticateDictionary(authenticateResponse))
@@ -96,41 +105,41 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
                 result(FlutterError(code: embeddedSdkError, message: "Could not get authenticate arguments", details: nil))
             }
 
-        case "getCredentials":
-            Embedded.shared.getCredentials { credResult in
-                switch credResult {
-                case let .success(credentials):
-                    let credentialDicts = credentials.map(makeCredentialDictionary)
-                    result(credentialDicts)
+        case "getPasskeys":
+            Embedded.shared.getPasskeys { getPasskeysResult in
+                switch getPasskeysResult {
+                case let .success(passkeys):
+                    let passkeyDicts = passkeys.map(makePasskeyDictionary)
+                    result(passkeyDicts)
                 case .failure(let error):
                     // TODO: standardize error messaging between iOS and Android
                     result(FlutterError(code: embeddedSdkError, message: error.localizedDescription, details: nil))
                 }
             }
 
-        case "deleteCredential":
+        case "deletePasskey":
             guard let args = call.arguments else {
-                result(FlutterError(code: embeddedSdkError, message: "Could not get deleteCredential arguments", details: nil))
+                result(FlutterError(code: embeddedSdkError, message: "Could not get deletePasskey arguments", details: nil))
                 return
             }
-            
+
             if let deleteArgs = args as? [String: Any?],
-               let credentialId = deleteArgs["credentialId"] as? String {
-                Embedded.shared.deleteCredential(for: CredentialID(credentialId)) { deleteCredResult in
-                    switch deleteCredResult {
+               let passkeyId = deleteArgs["passkeyId"] as? String {
+                Embedded.shared.deletePasskey(for: Passkey.Id(passkeyId)) { deletePasskeyResult in
+                    switch deletePasskeyResult {
                     case .success:
-                        result(credentialId)
+                        result(passkeyId)
                     case let .failure(error):
                         result(FlutterError(code: embeddedSdkError, message: error.localizedDescription, details: nil))
                     }
                 }
             } else {
-                result(FlutterError(code: embeddedSdkError, message: "Could not get deleteCredential arguments", details: nil))
+                result(FlutterError(code: embeddedSdkError, message: "Could not get deletePasskey arguments", details: nil))
             }
 
-        case "isBindCredentialUrl":
+        case "isBindPasskeyUrl":
             guard let args = call.arguments else {
-                result(FlutterError(code: embeddedSdkError, message: "Could not get isBindCredentialUrl arguments", details: nil))
+                result(FlutterError(code: embeddedSdkError, message: "Could not get isBindPasskeyUrl arguments", details: nil))
                 return
             }
 
@@ -140,9 +149,9 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
                     result(FlutterError(code: embeddedSdkError, message: "\(urlArg) is not a valid url", details: nil))
                     return
                 }
-                result(Embedded.shared.isBindCredentialUrl(url))
+                result(Embedded.shared.isBindPasskeyUrl(url))
             } else {
-                result(FlutterError(code: embeddedSdkError, message: "Could not get isBindCredentialUrl arguments", details: nil))
+                result(FlutterError(code: embeddedSdkError, message: "Could not get isBindPasskeyUrl arguments", details: nil))
             }
 
         case "isAuthenticateUrl":
@@ -161,65 +170,55 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
             } else {
                 result(FlutterError(code: embeddedSdkError, message: "Could not get isAuthenticateUrl arguments", details: nil))
             }
-            
+
         default: result(FlutterError(code: embeddedSdkError, message: "\(call.method) not implemented for EmbeddedSDK", details: nil))
         }
-    }
-}
-
-class CredentialExportStreamHandler: NSObject, FlutterStreamHandler {
-    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        return nil
-    }
-    
-    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        return nil
     }
 }
 
 // MARK: HELPERS
 private func makeAuthenticateDictionary(_ authenticateResponse: AuthenticateResponse) -> [String: Any?] {
     return [
-        "redirectUrl" : authenticateResponse.redirectURL.absoluteString,
+        "redirectUrl" : authenticateResponse.redirectUrl.absoluteString,
         "message" : authenticateResponse.message,
     ]
 }
 
-private func makeBindCredentialDictionary(_ bindCredentialResponse: BindCredentialResponse) -> [String: Any?] {
+private func makeBindPasskeyDictionary(_ bindPasskeyResponse: BindPasskeyResponse) -> [String: Any?] {
     return [
-        "credential" : makeCredentialDictionary(bindCredentialResponse.credential),
-        "postBindingRedirectUri" : bindCredentialResponse.postBindingRedirectURI?.absoluteString,
+        "passkey" : makePasskeyDictionary(bindPasskeyResponse.passkey),
+        "postBindingRedirectUri" : bindPasskeyResponse.postBindingRedirectUri?.absoluteString,
     ]
 }
 
-private func makeCredentialDictionary(_ credential: Credential) -> [String: Any?] {
+private func makePasskeyDictionary(_ passkey: Passkey) -> [String: Any?] {
     return [
-        "id" : credential.id.value,
-        "localCreated" : credential.localCreated.description,
-        "localUpdated" : credential.localUpdated.description,
-        "apiBaseUrl" : credential.apiBaseURL.absoluteString,
-        "tenantId" : credential.tenantID.value,
-        "realmId" : credential.realmID.value,
-        "identityId" : credential.identityID.value,
-        "keyHandle" : credential.keyHandle.value,
-        "state" : credential.state.rawValue,
-        "created" : credential.created.description,
-        "updated" : credential.updated.description,
+        "id" : passkey.id.value,
+        "localCreated" : passkey.localCreated.description,
+        "localUpdated" : passkey.localUpdated.description,
+        "apiBaseUrl" : passkey.apiBaseUrl.absoluteString,
+        "keyHandle" : passkey.keyHandle.value,
+        "state" : passkey.state.rawValue,
+        "created" : passkey.created.description,
+        "updated" : passkey.updated.description,
         "tenant": [
-            "displayName": credential.tenant.displayName,
+            "id": passkey.tenant.id.value,
+            "displayName": passkey.tenant.displayName,
         ],
         "realm": [
-            "displayName": credential.realm.displayName,
+            "id": passkey.realm.id.value,
+            "displayName": passkey.realm.displayName,
         ],
         "identity": [
-            "displayName": credential.identity.displayName,
-            "username": credential.identity.username,
-            "primaryEmailAddress": credential.identity.primaryEmailAddress,
+            "id": passkey.identity.id.value,
+            "displayName": passkey.identity.displayName,
+            "username": passkey.identity.username,
+            "primaryEmailAddress": passkey.identity.primaryEmailAddress ?? "",
         ],
         "theme": [
-            "logoLightUrl": credential.theme.logoLightURL.absoluteString,
-            "logoDarkUrl": credential.theme.logoDarkURL.absoluteString,
-            "supportUrl": credential.theme.supportURL.absoluteString,
-        ]
+            "logoLightUrl": passkey.theme.logoLightUrl.absoluteString,
+            "logoDarkUrl": passkey.theme.logoDarkUrl.absoluteString,
+            "supportUrl": passkey.theme.supportUrl.absoluteString,
+        ],
     ]
 }

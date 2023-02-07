@@ -1,4 +1,4 @@
-#import "EmbeddedsdkPlugin.h"
+#import "EmbeddedSdkPlugin.h"
 #if __has_include(<bi_sdk_flutter/bi_sdk_flutter-Swift.h>)
 #import <bi_sdk_flutter/bi_sdk_flutter-Swift.h>
 #else
@@ -8,8 +8,8 @@
 #import "bi_sdk_flutter-Swift.h"
 #endif
 
-@implementation EmbeddedsdkPlugin
+@implementation EmbeddedSdkPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  [SwiftEmbeddedsdkPlugin registerWithRegistrar:registrar];
+  [SwiftEmbeddedSdkPlugin registerWithRegistrar:registrar];
 }
 @end
