@@ -39,6 +39,11 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final bool _enableLogging = true;
+
+  Domain _initDomain = Domain.us;
+  String _initUSTenantText = '';
+  String _initEUTenantText = '';
+
   final _createUserController = TextEditingController();
   String _createUserText = '';
 
@@ -107,9 +112,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    Embeddedsdk.initialize(BuildConfig.PUBLIC_CLIENT_ID, Domain.us, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
-    _handleInitialUri();
-    _handleIncomingLinks();
   }
 
   @override
@@ -118,6 +120,54 @@ class _MyAppState extends State<MyApp> {
     Embeddedsdk.cancelExtendCredentials();
     _importTokenController.dispose();
     super.dispose();
+  }
+
+  void _initUSTenant() async {
+    String initUSTenantText = '';
+
+    setState(() {
+      _initEUTenantText = initUSTenantText;
+      _initUSTenantText = initUSTenantText;
+    });
+
+    initUSTenantText = _initTenant(Domain.us);
+
+    setState(() {
+      _initUSTenantText = initUSTenantText;
+    });
+  }
+
+  void _initEUTenant() async {
+    String initEUTenantText = '';
+
+    setState(() {
+      _initEUTenantText = initEUTenantText;
+      _initUSTenantText = initEUTenantText;
+    });
+
+    initEUTenantText = _initTenant(Domain.eu);
+
+    setState(() {
+      _initEUTenantText = initEUTenantText;
+    });
+  }
+
+  String _initTenant(Domain domain) {
+    String initTenantText = '';
+
+    try {
+      _initDomain = domain;
+
+      Embeddedsdk.initialize(BuildConfig.getPublicClientId(_initDomain), _initDomain, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
+      _handleInitialUri();
+      _handleIncomingLinks();
+
+      initTenantText = "Initialized Client on $_initDomain";
+    } on Exception catch(e) {
+      initTenantText = "Error initializing $e";
+    }
+
+    return initTenantText;
   }
 
   void _createDemoUser() async {
@@ -129,9 +179,11 @@ class _MyAppState extends State<MyApp> {
     try {
       var uuid = const Uuid().v4().toString();
       var response = await client.post(
-          Uri.parse(BuildConfig.CREATE_USER_URL),
+          Uri.parse(BuildConfig.getCreateUserUrl(_initDomain)),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
+            'Accept': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer ${BuildConfig.getApiToken(_initDomain)}',
           },
           body: jsonEncode({
             'binding_token_delivery_method': 'email',
@@ -162,9 +214,11 @@ class _MyAppState extends State<MyApp> {
 
     try {
       var response = await client.post(
-          Uri.parse(BuildConfig.RECOVER_USER_URL),
+          Uri.parse(BuildConfig.getRecoverUserUrl(_initDomain)),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
+            'Accept': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer ${BuildConfig.getApiToken(_initDomain)}',
           },
           body: jsonEncode({
             'binding_token_delivery_method': 'email',
@@ -203,10 +257,10 @@ class _MyAppState extends State<MyApp> {
 
       try {
         var response = await client.post(
-            Uri.parse(BuildConfig.TOKEN_ENDPOINT),
+            Uri.parse(BuildConfig.getTokenEndpoint(_initDomain)),
             headers: <String, String>{
               'Content-Type': 'application/x-www-form-urlencoded',
-              'Authorization': 'Basic ' + base64Encode(utf8.encode('${BuildConfig.CONFIDENTIAL_CLIENT_ID}:${BuildConfig.CONFIDENTIAL_CLIENT_SECRET}'))
+              'Authorization': 'Basic ${base64Encode(utf8.encode('${BuildConfig.getConfidentialClientId(_initDomain)}:${BuildConfig.getConfidentialClientSecret(_initDomain)}'))}'
             },
             encoding: Encoding.getByName('utf-8'),
             body: params
@@ -368,7 +422,7 @@ class _MyAppState extends State<MyApp> {
     String authz;
     String authzText;
 
-    Embeddedsdk.initialize(BuildConfig.CONFIDENTIAL_CLIENT_ID, Domain.us, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
+    Embeddedsdk.initialize(BuildConfig.getConfidentialClientId(_initDomain), _initDomain, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
 
     try {
       authz = await Embeddedsdk.authorize(
@@ -429,8 +483,8 @@ class _MyAppState extends State<MyApp> {
     TokenResponse token;
     String tokenText = "";
 
-    Embeddedsdk.initialize(BuildConfig.PUBLIC_CLIENT_ID, Domain.us, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
-    
+    Embeddedsdk.initialize(BuildConfig.getPublicClientId(_initDomain), _initDomain, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
+
     try {
       token = await Embeddedsdk.authenticate();
       tokenText = token.toString();
@@ -498,6 +552,13 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             children: [
               _card([
+                _title("Tenant Utils"),
+                _description("\nTenants:"),
+                _buttonTextGroup("US Tenant", _initUSTenant, _initUSTenantText),
+                _buttonTextGroup("EU Tenant", _initEUTenant, _initEUTenantText),
+                _subTitle("\nNote: Before doing anything else, you must select a tenant"),
+              ]),
+              _card([
                 _title("Demo Utils"),
                 _description("\nCreate user for testing. Get an email with registration link."),
                 _buttonInputTextGroup("Create Demo User", "User Email", _createUserController, _createDemoUser, _createUserText),
@@ -547,7 +608,7 @@ class _MyAppState extends State<MyApp> {
       )
     ));
   }
-  
+
   Widget _card(List<Widget> widgets) {
     return Card(
         child: Padding(
