@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0] - 2023-01-10
 
+* Add support for EU data center
 * Upgrade to Flutter 3
 
 ## [0.2.0] - 2022-03-29

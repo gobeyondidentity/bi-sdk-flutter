@@ -352,8 +352,8 @@ enum CredentialState {
 
 class CredentialStateHelper {
   static CredentialState fromString(String? state) {
-    if(state == null) {
-      return  CredentialState.unknown;
+    if (state == null) {
+      return CredentialState.unknown;
     }
 
     switch (state) {
