@@ -11,15 +11,17 @@ class Embeddedsdk {
   /// Initialize and configure the Beyond Identity Embedded SDK.
   ///
   /// [clientId] is the public or confidential client ID generated during the OIDC configuration.
+  /// [domain] is the region where your Beyond Identity account was created (us or eu).
   /// [biometricPrompt] is the prompt the user will see when asked for biometrics while
   /// extending a credential to another device.
   /// [redirectUri] is the URI where the user will be redirected after the authorization
   /// has completed. The redirect URI must be one of the URIs passed in the OIDC configuration.
   /// [enableLogging] enables logging if set to `true`.
   static Future<void> initialize(
-      String clientId, String biometricPrompt, String redirectUri, bool enableLogging) async {
+      String clientId, Domain domain, String biometricPrompt, String redirectUri, bool enableLogging) async {
     await _channel.invokeMethod("initialize", {
       'clientId': clientId,
+      'domain': domain.toString(),
       'biometricPrompt': biometricPrompt,
       'redirectUri': redirectUri,
       'enableLogging': enableLogging
@@ -364,4 +366,9 @@ class CredentialStateHelper {
         return CredentialState.unknown;
     }
   }
+}
+
+enum Domain {
+  us,
+  eu,
 }

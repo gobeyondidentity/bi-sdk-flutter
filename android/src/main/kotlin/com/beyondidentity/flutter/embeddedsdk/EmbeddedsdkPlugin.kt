@@ -10,6 +10,7 @@ import androidx.annotation.NonNull
 import com.beyondidentity.embedded.sdk.EmbeddedSdk
 import com.beyondidentity.embedded.sdk.extend.ExtendCredentialListener
 import com.beyondidentity.embedded.sdk.models.Credential
+import com.beyondidentity.embedded.sdk.models.Domain
 import com.beyondidentity.embedded.sdk.models.ExtendResponse
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -103,6 +104,7 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
                 "initialize" -> {
                     val app: Application? = currentActivity?.application
                     val clientId: String? = call.argument("clientId")
+                    val domain: String? = call.argument("domain")
                     val biometricPrompt: String? = call.argument("biometricPrompt")
                     val redirectUri: String? = call.argument("redirectUri")
                     call.argument<Boolean>("enableLogging")?.let {
@@ -111,14 +113,18 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
                         }
                     }
 
+                    var argDomain = Domain.US
+                    if (domain == "eu") { argDomain = Domain.EU }
+
                     this.clientId = clientId
                     this.redirectUri = redirectUri
                     checkNulls(app, this.clientId, biometricPrompt)?.let { (app, clientId, biometricPrompt) ->
                         EmbeddedSdk.init(
                             app = app as Application,
+                            clientId = clientId as String,
+                            domain = argDomain,
                             keyguardPrompt = keyguardPrompt,
                             logger = this.logger,
-                            clientId = clientId as String,
                             biometricAskPrompt = biometricPrompt as String,
                         )
                         isEmbeddedSdkInitialized = true

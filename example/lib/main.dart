@@ -108,7 +108,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    Embeddedsdk.initialize(BuildConfig.PUBLIC_CLIENT_ID, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
+    Embeddedsdk.initialize(BuildConfig.PUBLIC_CLIENT_ID, Domain.us, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
     _handleInitialUri();
     _handleIncomingLinks();
   }
@@ -369,7 +369,7 @@ class _MyAppState extends State<MyApp> {
     String authz;
     String authzText;
 
-    Embeddedsdk.initialize(BuildConfig.CONFIDENTIAL_CLIENT_ID, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
+    Embeddedsdk.initialize(BuildConfig.CONFIDENTIAL_CLIENT_ID, Domain.us, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
 
     try {
       authz = await Embeddedsdk.authorize(
@@ -430,7 +430,7 @@ class _MyAppState extends State<MyApp> {
     TokenResponse token;
     String tokenText = "";
 
-    Embeddedsdk.initialize(BuildConfig.PUBLIC_CLIENT_ID, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
+    Embeddedsdk.initialize(BuildConfig.PUBLIC_CLIENT_ID, Domain.us, "Gimmie your biometrics", BuildConfig.REDIRECT_URI, _enableLogging);
     
     try {
       token = await Embeddedsdk.authenticate();

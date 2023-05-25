@@ -3,7 +3,6 @@ import UIKit
 import BeyondIdentityEmbedded
 import os
 
-
 let embeddedSdkError = "FlutterEmbeddedSdkError"
 
 public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
@@ -33,6 +32,7 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
 
             if let initArgs = args as? [String: Any],
                let clientId = initArgs["clientId"] as? String,
+               let domain = initArgs["domain"] as? String,
                let biometricPrompt = initArgs["biometricPrompt"] as? String, 
                let redirectUri = initArgs["redirectUri"] as? String,
                let enableLogging = initArgs["enableLogging"] as? Bool {
@@ -43,7 +43,10 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
                     }
                 }
 
-                Embedded.initialize(biometricAskPrompt: biometricPrompt, clientID: clientId, redirectURI: redirectUri, logger: logger)
+                var argDomain = Domain.us
+                if (domain == "eu") { argDomain = Domain.eu }
+
+                Embedded.initialize(biometricAskPrompt: biometricPrompt, clientID: clientId, domain: argDomain, redirectURI: redirectUri, logger: logger)
                 isEmbeddedSdkInitialized = true
             } else {
                 result(FlutterError(code: embeddedSdkError, message: "Could not get initialize arguments", details: nil))

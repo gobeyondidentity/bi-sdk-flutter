@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.swift_version     = '5.5'
 
   s.dependency 'Flutter'
-  s.dependency 'BeyondIdentityEmbedded', '0.7.0'
+  s.dependency 'BeyondIdentityEmbedded', '0.8.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
