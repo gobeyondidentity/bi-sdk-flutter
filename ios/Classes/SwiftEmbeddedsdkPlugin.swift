@@ -44,7 +44,7 @@ public class SwiftEmbeddedsdkPlugin: NSObject, FlutterPlugin {
                 }
 
                 var argDomain = Domain.us
-                if (domain == "eu") { argDomain = Domain.eu }
+                if (domain == "Domain.eu") { argDomain = Domain.eu }
 
                 Embedded.initialize(biometricAskPrompt: biometricPrompt, clientID: clientId, domain: argDomain, redirectURI: redirectUri, logger: logger)
                 isEmbeddedSdkInitialized = true

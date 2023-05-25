@@ -114,7 +114,7 @@ class EmbeddedsdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, Plugi
                     }
 
                     var argDomain = Domain.US
-                    if (domain == "eu") { argDomain = Domain.EU }
+                    if (domain == "Domain.eu") { argDomain = Domain.EU }
 
                     this.clientId = clientId
                     this.redirectUri = redirectUri

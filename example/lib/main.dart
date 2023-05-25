@@ -24,7 +24,6 @@ class LoggingInterceptor implements InterceptorContract {
     print(data.toString());
     return data;
   }
-
 }
 
 void main() {
@@ -230,7 +229,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  /// Handle incoming links - the ones that the app will recieve from the OS
+  /// Handle incoming links - the ones that the app will receive from the OS
   /// while already started.
   void _handleIncomingLinks() {
     // It will handle app links while the app is already started - be it in
@@ -267,7 +266,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _handleInitialUri() async {
     // In this example app this is an almost useless guard, but it is here to
     // show we are not going to call getInitialUri multiple times, even if this
-    // was a weidget that will be disposed of (ex. a navigation route change).
+    // was a widget that will be disposed of (ex. a navigation route change).
     if (!_initialUriIsHandled) {
       _initialUriIsHandled = true;
 
@@ -285,7 +284,7 @@ class _MyAppState extends State<MyApp> {
         });
       } on PlatformException {
         // Platform messages may fail but we ignore the exception
-        debugPrint('falied to get initial uri');
+        debugPrint('failed to get initial uri');
       } on FormatException catch (err) {
         if (!mounted) return;
         debugPrint('malformed initial uri');
@@ -304,7 +303,7 @@ class _MyAppState extends State<MyApp> {
         String uri = registerUri.toString().replaceAll(":?", "://host/register?");
         debugPrint("Register with = $uri");
         credential = await Embeddedsdk.registerCredentialsWithUrl(uri);
-        regCredText = "Credential succeffuly registered";
+        regCredText = "Credential successfully registered";
       } on PlatformException catch (e) {
         debugPrint("platform exception = $e");
         regCredText = "Error registering credentials = $e";
@@ -468,7 +467,7 @@ class _MyAppState extends State<MyApp> {
     try {
       // test-acme-corp for devel, sdk-demo for prod
       await Embeddedsdk.registerCredentialsWithToken(_importTokenController.text);
-      importText = "Credentials succesfully registered";
+      importText = "Credentials successfully registered";
     } on PlatformException catch(e) {
       importText = "Error registering credentials $e";
     }
@@ -515,7 +514,7 @@ class _MyAppState extends State<MyApp> {
               ]),
               _card([
                 _title("Extended/Register Credentials"),
-                _subTitle("Before authneticating on another device, the credential needs to be transfered to that device."),
+                _subTitle("Before authenticating on another device, the credential needs to be transferred to that device."),
                 _description("\nTransfer a credential from this to another device. Extend Credentials will generate an extended credential that can be used to register the credential on another device\nNOTE: Lock screen needs to be set on the device!"),
                 _buttonTextGroup("Extend Credentials", _extendCredentials, _exportTokenText),
                 _description("\nExtending Credentials blocks the Embedded SDK from performing other operations. The extended credential needs to finish or be explicitly cancelled."),
@@ -531,13 +530,13 @@ class _MyAppState extends State<MyApp> {
                 _subTitle("Public clients are unable to keep the secret secure (e.x. front end app with no backend)\n"),
                 _description("Use authenticate function when your client is configured as public, it will go through the whole flow and get the Access and ID tokens"),
                 _buttonTextGroup("Authenticate", _authenticate, _authTokenText),
-                _title("\nOIDC Confidentail client"),
-                _subTitle("Confidentail client are able to keep the secret secure (e.x. your backend)\n"),
+                _title("\nOIDC Confidential client"),
+                _subTitle("Confidential client are able to keep the secret secure (e.x. your backend)\n"),
                 _description("(OPTIONAL) Use PKCE for increased security. If the flow is started with PKCE it needs to be completed with PKCE. Read more in the documentation."),
                 _buttonTextGroup("Generate PKCE challenge", _createPkce, _pkce?.toString() ?? ""),
-                _description("\nUse authorize function when your client is configured as confidentail. You will get an authorization code that needs to be exchanged for Access and ID token."),
+                _description("\nUse authorize function when your client is configured as confidential. You will get an authorization code that needs to be exchanged for Access and ID token."),
                 _buttonTextGroup("Authorize", _authorize, _authorizationCodeText),
-                _subTitle("\nExchange Authorization Code for Acccess and ID token."),
+                _subTitle("\nExchange Authorization Code for Access and ID token."),
                 _description("NOTE: To exchange the authorization code for Access and ID token we need the client secret."),
                 _description("For demo purposes, we're storing the client secret on the device. DO NOT DO THIS IN PROD!"),
                 _buttonTextGroup("Exchange Authz Code for Tokens", _exchangeAuthzCodeForTokens, _authorizationExchangeTokenText),

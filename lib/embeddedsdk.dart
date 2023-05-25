@@ -18,7 +18,12 @@ class Embeddedsdk {
   /// has completed. The redirect URI must be one of the URIs passed in the OIDC configuration.
   /// [enableLogging] enables logging if set to `true`.
   static Future<void> initialize(
-      String clientId, Domain domain, String biometricPrompt, String redirectUri, bool enableLogging) async {
+    String clientId,
+    Domain domain,
+    String biometricPrompt,
+    String redirectUri,
+    bool enableLogging,
+  ) async {
     await _channel.invokeMethod("initialize", {
       'clientId': clientId,
       'domain': domain.toString(),
