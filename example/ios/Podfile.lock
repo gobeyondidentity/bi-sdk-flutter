@@ -2,7 +2,7 @@ PODS:
   - BeyondIdentityCoreSDK (0.8.0)
   - BeyondIdentityEmbedded (0.8.0):
     - BeyondIdentityCoreSDK (= 0.8.0)
-  - embeddedsdk (0.3.0):
+  - embeddedsdk (0.3.1):
     - BeyondIdentityEmbedded (= 0.8.0)
     - Flutter
   - Flutter (1.0.0)
@@ -30,7 +30,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   BeyondIdentityCoreSDK: e055137cca81fce8b83be0e91f69fd873aee605a
   BeyondIdentityEmbedded: 729425bdbf261d34ecc357968241b9df57ae5b9c
-  embeddedsdk: 19291141affe2555e6651ee49820446cb137409a
+  embeddedsdk: 7ddb337b5ac07013919311e165d1d32a01ff2493
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   uni_links: d97da20c7701486ba192624d99bffaaffcfc298a
 

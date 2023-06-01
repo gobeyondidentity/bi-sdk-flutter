@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name              = 'embeddedsdk'
-  s.version           = '0.3.0'
+  s.version           = '0.3.1'
   s.summary           = 'Passwordless identities for workforces and customers'
   s.homepage          = 'https://beyondidentity.com'
   s.license           = { :file => '../LICENSE' }
