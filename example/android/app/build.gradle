@@ -10,6 +10,7 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    namespace "com.beyondidentity.flutter.embeddedsdk_example"
     compileSdkVersion 33
     buildToolsVersion '33.0.0'
 
@@ -55,5 +56,4 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }

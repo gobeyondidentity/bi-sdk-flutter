@@ -2,7 +2,7 @@
 
 class BuildConfig {
   // SDK Version
-  static const SDK_VERSION = "2.0.0";
+  static const SDK_VERSION = "2.0.1";
 
   // Environment
   static const ENVIRONMENT = "production";

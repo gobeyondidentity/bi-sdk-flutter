@@ -58,6 +58,17 @@ class _MyAppState extends State<MyApp> {
 
   String _authAuth0ResultText = '';
 
+  String _authContextResultText = '';
+
+  final _emailOTPController = TextEditingController();
+  String _emailOTPText = '';
+  String _emailOTPResultText = '';
+  String _emailOTPURL = '';
+
+  final _redeemOTPController = TextEditingController();
+  String _redeemOTPText = '';
+  String _redeemOTPResultText = '';
+
   final _authController = TextEditingController();
   String _authText = '';
   String _authResultText = '';
@@ -75,6 +86,8 @@ class _MyAppState extends State<MyApp> {
   final _deletePasskeyController = TextEditingController();
   String _deletePasskeyText = '';
   String _deletePasskeyResultText = '';
+
+  bool shouldDeletePasskeyOnEmpty = false;
 
   @override
   void initState() {
@@ -118,7 +131,8 @@ class _MyAppState extends State<MyApp> {
               await EmbeddedSdk.bindPasskey(
                   responseBody['credential_binding_link']);
           registerUserText = '';
-          registerUserResultText = jsonPrettyPrint(bindPasskeyResponse.toString());
+          registerUserResultText =
+              jsonPrettyPrint(bindPasskeyResponse.toString());
         } on PlatformException catch (e) {
           errorPrint(e);
           registerUserResultText = "could not register passkey $e";
@@ -149,7 +163,8 @@ class _MyAppState extends State<MyApp> {
 
     try {
       var response = await client.post(
-        Uri.parse("https://acme-cloud.byndid.com/recover-credential-binding-link"),
+        Uri.parse(
+            "https://acme-cloud.byndid.com/recover-credential-binding-link"),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -170,7 +185,8 @@ class _MyAppState extends State<MyApp> {
               await EmbeddedSdk.bindPasskey(
                   responseBody['credential_binding_link']);
           recoverUserText = '';
-          recoverUserResultText = jsonPrettyPrint(bindPasskeyResponse.toString());
+          recoverUserResultText =
+              jsonPrettyPrint(bindPasskeyResponse.toString());
         } on PlatformException catch (e) {
           errorPrint(e);
           recoverUserResultText = "could not recover passkey $e";
@@ -197,17 +213,21 @@ class _MyAppState extends State<MyApp> {
     String bindText = _bindText;
     String bindResultText = '';
 
-    try {
-      BindPasskeyResponse bindPasskeyResponse =
-          await EmbeddedSdk.bindPasskey(_bindController.text);
-      bindText = '';
-      bindResultText = jsonPrettyPrint(bindPasskeyResponse.toString());
-    } on PlatformException catch (e) {
-      errorPrint(e);
-      bindResultText = "could not bind passkey $e";
-    } catch (e) {
-      errorPrint(e);
-      bindResultText = "${e.runtimeType} binding passkey = $e";
+    if (_bindController.text.isEmpty) {
+      bindResultText = "Please provide a Bind Passkey URL";
+    } else {
+      try {
+        BindPasskeyResponse bindPasskeyResponse =
+            await EmbeddedSdk.bindPasskey(_bindController.text);
+        bindText = '';
+        bindResultText = jsonPrettyPrint(bindPasskeyResponse.toString());
+      } on PlatformException catch (e) {
+        errorPrint(e);
+        bindResultText = "could not bind passkey $e";
+      } catch (e) {
+        errorPrint(e);
+        bindResultText = "${e.runtimeType} binding passkey = $e";
+      }
     }
 
     if (!mounted) return;
@@ -215,6 +235,93 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _bindText = bindText;
       _bindResultText = bindResultText;
+    });
+  }
+
+  Future<void> _emailOTP() async {
+    String emailOTPText = _emailOTPText;
+    String emailOTPResultText = '';
+
+    if (_emailOTPController.text.isEmpty) {
+      emailOTPResultText = "Please provide an email address";
+    } else {
+      final pkcePair = PkcePair.generate();
+      http.Client client =
+          InterceptedClient.build(interceptors: [LoggingInterceptor()]);
+      var response = await client.get(
+        Uri.parse(
+          "https://auth-us.beyondidentity.com/v1/tenants/00012da391ea206d/realms/862e4b72cfdce072/applications/a8c0aa60-38e4-42b6-bd52-ef64aba5478b/authorize"
+          "?state=state"
+          "&scope=openid"
+          "&response_type=code"
+          "&redirect_uri=${Uri.encodeComponent("acme://")}"
+          "&code_challenge_method=S256"
+          "&code_challenge=${pkcePair.codeChallenge}"
+          "&client_id=KhSWSmfhZ6xCMz9yw7DpJcv5",
+        ),
+      );
+      Map responseBody = json.decode(response.body);
+
+      try {
+        OtpChallengeResponse emailOTPResponse =
+            await EmbeddedSdk.authenticateOtp(
+                responseBody['authenticate_url'], _emailOTPController.text);
+        emailOTPText = '';
+        _emailOTPURL = emailOTPResponse.url;
+        emailOTPResultText = jsonPrettyPrint(emailOTPResponse.toString());
+      } on PlatformException catch (e) {
+        errorPrint(e);
+        emailOTPResultText = "could not authenticate with otp $e";
+      } catch (e) {
+        errorPrint(e);
+        emailOTPResultText = "${e.runtimeType} authenticate with otp = $e";
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _emailOTPText = emailOTPText;
+      _emailOTPResultText = emailOTPResultText;
+    });
+  }
+
+  Future<void> _redeemOTP() async {
+    String redeemOTPText = _redeemOTPText;
+    String redeemOTPResultText = '';
+
+    if (_redeemOTPController.text.isEmpty) {
+      redeemOTPResultText = "Please provide an OTP found in your email";
+    } else {
+      try {
+        RedeemOtpResponse redeemOTPResponse = await EmbeddedSdk.redeemOtp(
+            _emailOTPURL, _redeemOTPController.text);
+        if (redeemOTPResponse.isSuccess) {
+          final authenticateResponse = redeemOTPResponse.success!;
+          redeemOTPResultText =
+              jsonPrettyPrint(authenticateResponse.toString());
+        } else if (redeemOTPResponse.isFailedOtp) {
+          final otpChallengeResponse = redeemOTPResponse.failedOtp!;
+          redeemOTPResultText =
+              jsonPrettyPrint(otpChallengeResponse.toString());
+        } else {
+          redeemOTPResultText = 'Unexpected response';
+        }
+        redeemOTPText = '';
+      } on PlatformException catch (e) {
+        errorPrint(e);
+        redeemOTPResultText = "could not redeem OTP $e";
+      } catch (e) {
+        errorPrint(e);
+        redeemOTPResultText = "${e.runtimeType} redeem OTP = $e";
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _redeemOTPText = redeemOTPText;
+      _redeemOTPResultText = redeemOTPResultText;
     });
   }
 
@@ -243,14 +350,13 @@ class _MyAppState extends State<MyApp> {
         if (!mounted) return;
 
         showDialog(
-          context: context,
-          builder: (context) {
-            return SimpleDialog(
-              title: const Text('Select account'),
-              children: widgets,
-            );
-          }
-        );
+            context: context,
+            builder: (context) {
+              return SimpleDialog(
+                title: const Text('Select account'),
+                children: widgets,
+              );
+            });
       }
     } on PlatformException catch (e) {
       errorPrint(e);
@@ -259,6 +365,53 @@ class _MyAppState extends State<MyApp> {
       errorPrint(e);
       rethrow;
     }
+  }
+
+  Future<void> _authContext() async {
+    updateAuthResultText(authResultText) async {
+      if (!mounted) return;
+
+      setState(() {
+        _authContextResultText = authResultText;
+      });
+    }
+
+    final pkcePair = PkcePair.generate();
+
+    http.Client client =
+        InterceptedClient.build(interceptors: [LoggingInterceptor()]);
+
+    var response = await client.get(
+      Uri.parse(
+        "https://auth-us.beyondidentity.com/v1/tenants/00012da391ea206d/realms/862e4b72cfdce072/applications/a8c0aa60-38e4-42b6-bd52-ef64aba5478b/authorize"
+        "?state=state"
+        "&scope=openid"
+        "&response_type=code"
+        "&redirect_uri=${Uri.encodeComponent("acme://")}"
+        "&code_challenge_method=S256"
+        "&code_challenge=${pkcePair.codeChallenge}"
+        "&client_id=KhSWSmfhZ6xCMz9yw7DpJcv5",
+      ),
+    );
+
+    Map responseBody = json.decode(response.body);
+
+    String authContextResultText = '';
+
+    try {
+      AuthenticationContext authContextResponse =
+          await EmbeddedSdk.getAuthenticationContext(
+              responseBody['authenticate_url']);
+      authContextResultText = jsonPrettyPrint(authContextResponse.toString());
+    } on PlatformException catch (e) {
+      errorPrint(e);
+      authContextResultText = "could not get authentication context $e";
+    } catch (e) {
+      errorPrint(e);
+      authContextResultText = "${e.runtimeType} authenticating context = $e";
+    }
+
+    updateAuthResultText(authContextResultText);
   }
 
   Future<void> _authenticateBeyondIdentity() async {
@@ -540,19 +693,23 @@ class _MyAppState extends State<MyApp> {
     String authText = _authText;
     String authResultText = '';
 
-    try {
-      onSelectPasskey((passkeyId) async {
-        AuthenticateResponse authenticateResponse =
-            await EmbeddedSdk.authenticate(_authController.text, passkeyId);
-        authText = '';
-        authResultText = jsonPrettyPrint(authenticateResponse.toString());
-      });
-    } on PlatformException catch (e) {
-      errorPrint(e);
-      authResultText = "could not authenticate $e";
-    } catch (e) {
-      errorPrint(e);
-      authResultText = "${e.runtimeType} authenticating = $e";
+    if (_authController.text.isEmpty) {
+      authResultText = "Please provide an Authenticate URL";
+    } else {
+      try {
+        onSelectPasskey((passkeyId) async {
+          AuthenticateResponse authenticateResponse =
+              await EmbeddedSdk.authenticate(_authController.text, passkeyId);
+          authText = '';
+          authResultText = jsonPrettyPrint(authenticateResponse.toString());
+        });
+      } on PlatformException catch (e) {
+        errorPrint(e);
+        authResultText = "could not authenticate $e";
+      } catch (e) {
+        errorPrint(e);
+        authResultText = "${e.runtimeType} authenticating = $e";
+      }
     }
 
     if (!mounted) return;
@@ -597,8 +754,9 @@ class _MyAppState extends State<MyApp> {
       if (_deletePasskeyController.text.isNotEmpty) {
         await EmbeddedSdk.deletePasskey(_deletePasskeyController.text);
         deletePasskeyText = '';
-        deletePasskeyResultText = "Deleted passkey ${_deletePasskeyController.text}";
-      } else {
+        deletePasskeyResultText =
+            "Deleted passkey ${_deletePasskeyController.text}";
+      } else if (shouldDeletePasskeyOnEmpty) {
         List<Passkey> passkeys = await EmbeddedSdk.getPasskeys();
         if (passkeys.isNotEmpty) {
           await EmbeddedSdk.deletePasskey(passkeys.first.id);
@@ -606,8 +764,12 @@ class _MyAppState extends State<MyApp> {
           deletePasskeyResultText = "Deleted passkey ${passkeys.first.id}";
         } else {
           deletePasskeyText = '';
-          deletePasskeyResultText = "No passkeys to delete";
+          deletePasskeyResultText =
+              "There are no passkeys on this device to delete";
         }
+      } else {
+        deletePasskeyText = '';
+        deletePasskeyResultText = "Please enter a passkey id to delete";
       }
     } on PlatformException catch (e) {
       errorPrint(e);
@@ -629,17 +791,21 @@ class _MyAppState extends State<MyApp> {
     String bindUrlText = _bindUrlText;
     String bindUrlResultText = '';
 
-    try {
-      bool isBindUrl =
-          await EmbeddedSdk.isBindPasskeyUrl(_bindUrlController.text);
-      bindUrlText = '';
-      bindUrlResultText = isBindUrl.toString();
-    } on PlatformException catch (e) {
-      errorPrint(e);
-      bindUrlResultText = "could not validate bind passkey url $e";
-    } catch (e) {
-      errorPrint(e);
-      bindUrlResultText = "${e.runtimeType} validating = $e";
+    if (_bindUrlController.text.isEmpty) {
+      bindUrlResultText = "Please provide a Bind Passkey URL";
+    } else {
+      try {
+        bool isBindUrl =
+            await EmbeddedSdk.isBindPasskeyUrl(_bindUrlController.text);
+        bindUrlText = '';
+        bindUrlResultText = isBindUrl.toString();
+      } on PlatformException catch (e) {
+        errorPrint(e);
+        bindUrlResultText = "could not validate bind passkey url $e";
+      } catch (e) {
+        errorPrint(e);
+        bindUrlResultText = "${e.runtimeType} validating = $e";
+      }
     }
 
     if (!mounted) return;
@@ -654,17 +820,21 @@ class _MyAppState extends State<MyApp> {
     String authUrlText = _authUrlText;
     String authUrlResultText = '';
 
-    try {
-      bool isAuthUrl =
-          await EmbeddedSdk.isAuthenticateUrl(_authUrlController.text);
-      authUrlText = '';
-      authUrlResultText = isAuthUrl.toString();
-    } on PlatformException catch (e) {
-      errorPrint(e);
-      authUrlResultText = "could not validate authenticate url $e";
-    } catch (e) {
-      errorPrint(e);
-      authUrlResultText = "${e.runtimeType} validating = $e";
+    if (_authUrlController.text.isEmpty) {
+      authUrlResultText = "Please provide an Authenticate URL";
+    } else {
+      try {
+        bool isAuthUrl =
+            await EmbeddedSdk.isAuthenticateUrl(_authUrlController.text);
+        authUrlText = '';
+        authUrlResultText = isAuthUrl.toString();
+      } on PlatformException catch (e) {
+        errorPrint(e);
+        authUrlResultText = "could not validate authenticate url $e";
+      } catch (e) {
+        errorPrint(e);
+        authUrlResultText = "${e.runtimeType} validating = $e";
+      }
     }
 
     if (!mounted) return;
@@ -676,11 +846,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _viewDeveloperDocs() async {
-    _launchUrl("https://developer.beyondidentity.com/docs/v1/sdks/kotlin-sdk/overview");
+    _launchUrl("https://developer.beyondidentity.com");
   }
 
   Future<void> _visitSupport() async {
-    _launchUrl("https://join.slack.com/t/byndid/shared_invite/zt-1anns8n83-NQX4JvW7coi9dksADxgeBQ");
+    _launchUrl(
+        "https://join.slack.com/t/byndid/shared_invite/zt-1anns8n83-NQX4JvW7coi9dksADxgeBQ");
   }
 
   Future<void> _launchUrl(String url) async {
@@ -744,71 +915,139 @@ class _MyAppState extends State<MyApp> {
               children: [
                 _card([
                   _title("\nEmbedded SDK Functionality"),
-                  _description("SDK Version: ${BuildConfig.SDK_VERSION.capitalize()}", paddingTop: 8.0, paddingBottom: 0.0),
-                  _description("Environment: ${BuildConfig.ENVIRONMENT.capitalize()}", paddingTop: 0.0, paddingBottom: 8.0),
+                  _description(
+                      "SDK Version: ${BuildConfig.SDK_VERSION.capitalize()}",
+                      paddingTop: 8.0,
+                      paddingBottom: 0.0),
+                  _description(
+                      "Environment: ${BuildConfig.ENVIRONMENT.capitalize()}",
+                      paddingTop: 0.0,
+                      paddingBottom: 8.0),
                 ]),
                 _card([
                   _title("\nGet Started"),
                   _subTitle("Bind Passkey"),
-                  _description("To get started with using our embedded SDK sample app, enter any username to bind a passkey to this device."),
-                  _buttonInputTextGroup("Bind Passkey", "Username", _registerUserController, _registerDemoUser, _registerUserText),
+                  _description(
+                      "To get started with using our embedded SDK sample app, enter any username to bind a passkey to this device."),
+                  _buttonInputTextGroup(null, "Bind Passkey", _registerDemoUser,
+                      "Username", _registerUserController, _registerUserText),
                   Text(_registerUserResultText),
                   _subTitle("Recover Passkey"),
-                  _description("If you have an account with a passkey you can’t access anymore, enter your username to recover your account and bind a passkey to this device."),
-                  _buttonInputTextGroup("Recover Passkey", "Username", _recoverUserController, _recoverDemoUser, _recoverUserText),
+                  _description(
+                      "If you have an account with a passkey you can’t access anymore, enter your username to recover your account and bind a passkey to this device."),
+                  _buttonInputTextGroup(
+                      null,
+                      "Recover Passkey",
+                      _recoverDemoUser,
+                      "Username",
+                      _recoverUserController,
+                      _recoverUserText),
                   Text(_recoverUserResultText),
                 ]),
                 _card([
                   _title("\nBind Passkey"),
-                  _description("Paste the Bind Passkey URL you received in your email or generated through the API in order to bind a passkey."),
-                  _buttonInputTextGroup("Bind Passkey", "Bind Passkey URL", _bindController, _bind, _bindText),
+                  _description(
+                      "Paste the Bind Passkey URL you received in your email or generated through the API in order to bind a passkey."),
+                  _buttonInputTextGroup(null, "Bind Passkey", _bind,
+                      "Bind Passkey URL", _bindController, _bindText),
                   Text(_bindResultText),
                 ]),
                 _card([
                   _title("\nAuthenticate"),
-                  _description("Authenticate against a passkey bound to this device. If more than one passkey is present, you must select a passkey during authentication."),
+                  _description(
+                      "Authenticate against a passkey bound to this device. If more than one passkey is present, you must select a passkey during authentication."),
+                  _subTitle("Authentication Context"),
+                  _description(
+                      "Returns the Authentication Context for the current transaction."),
+                  _buttonTextGroup(null, "Authentication Context", _authContext,
+                      _authContextResultText),
                   _subTitle("Authenticate with Beyond Identity"),
-                  _description("Try authenticating with Beyond Identity as the primary IdP."),
-                  _buttonTextGroup("Authenticate with Beyond Identity", _authenticateBeyondIdentity, _authBeyondIdentityResultText),
+                  _description(
+                      "Try authenticating with Beyond Identity as the primary IdP."),
+                  _buttonTextGroup(
+                      null,
+                      "Authenticate with Beyond Identity",
+                      _authenticateBeyondIdentity,
+                      _authBeyondIdentityResultText),
                   _subTitle("Authenticate with Okta (Web)"),
-                  _description("Try authenticating with Okta using Beyond Identity as a secondary IdP."),
-                  _buttonTextGroup("Authenticate with Okta", _authenticateOkta, _authOktaResultText),
+                  _description(
+                      "Try authenticating with Okta using Beyond Identity as a secondary IdP."),
+                  _buttonTextGroup(null, "Authenticate with Okta",
+                      _authenticateOkta, _authOktaResultText),
                   _subTitle("Authenticate with Auth0 (Web)"),
-                  _description("Try authenticating with Auth0 using Beyond Identity as a secondary IdP."),
-                  _buttonTextGroup("Authenticate with Auth0", _authenticateAuth0, _authAuth0ResultText),
+                  _description(
+                      "Try authenticating with Auth0 using Beyond Identity as a secondary IdP."),
+                  _buttonTextGroup(null, "Authenticate with Auth0",
+                      _authenticateAuth0, _authAuth0ResultText),
+                  _subTitle("Authenticate with Email OTP"),
+                  _description(
+                      "Try authenticating with Email OTP using Beyong Identity."),
+                  _buttonInputTextGroup(null, "Authenticate with Email OTP",
+                      _emailOTP, "Email", _emailOTPController, _emailOTPText),
+                  Text(_emailOTPResultText),
+                  _subTitle("Redeem with Email OTP"),
+                  _description("Try redeeming the OTP in your email."),
+                  _buttonInputTextGroup(null, "Redeem with Email OTP",
+                      _redeemOTP, "OTP", _redeemOTPController, _redeemOTPText),
+                  Text(_redeemOTPResultText),
                 ]),
                 _card([
                   _title("\nAuthenticate"),
-                  _description("Authenticate against a passkey bound to this device. If more than one passkey is present, you must select a passkey during authentication."),
-                  _buttonInputTextGroup("Authenticate", "Authenticate URL", _authController, _authenticate, _authText),
+                  _description(
+                      "Authenticate against a passkey bound to this device. If more than one passkey is present, you must select a passkey during authentication."),
+                  _buttonInputTextGroup(null, "Authenticate", _authenticate,
+                      "Authenticate URL", _authController, _authText),
                   Text(_authResultText),
                 ]),
                 _card([
                   _title("\nPasskey Management"),
                   _subTitle("View Passkey"),
-                  _description("View details of your passkey, such as date created, identity and other information related to your device."),
-                  _buttonTextGroup("Get Passkeys", _getPasskeys, _getPasskeysResultText),
+                  _description(
+                      "View details of your passkey, such as date created, identity and other information related to your device."),
+                  _buttonTextGroup("Get Passkeys", "Get Passkeys", _getPasskeys,
+                      _getPasskeysResultText),
                   _subTitle("Delete Passkey"),
                   _description("Delete your passkey on your device."),
-                  _buttonInputTextGroup("Delete Passkey", "Passkey ID", _deletePasskeyController, _deletePasskey, _deletePasskeyText),
+                  _buttonInputTextGroup(
+                      "Delete Passkey",
+                      "Delete Passkey",
+                      _deletePasskey,
+                      "Passkey ID",
+                      _deletePasskeyController,
+                      _deletePasskeyText),
                   Text(_deletePasskeyResultText),
                 ]),
                 _card([
                   _title("\nURL Validation"),
                   _subTitle("Bind Passkey URL"),
-                  _description("Paste a Url here to validate if it's a bind passkey url."),
-                  _buttonInputTextGroup("Validate URL", "Bind Passkey URL", _bindUrlController, _bindUrl, _bindUrlText),
+                  _description(
+                      "Paste a Url here to validate if it's a bind passkey url."),
+                  _buttonInputTextGroup(
+                      "Validate Bind Passkey URL",
+                      "Validate URL",
+                      _bindUrl,
+                      "Bind Passkey URL",
+                      _bindUrlController,
+                      _bindUrlText),
                   Text(_bindUrlResultText),
                   _subTitle("Authenticate URL"),
-                  _description("Paste a Url here to validate if it's an authenticate url."),
-                  _buttonInputTextGroup("Validate URL", "Authenticate URL", _authUrlController, _authenticateUrl, _authUrlText),
+                  _description(
+                      "Paste a Url here to validate if it's an authenticate url."),
+                  _buttonInputTextGroup(
+                      "Validate Authenticate URL",
+                      "Validate URL",
+                      _authenticateUrl,
+                      "Authenticate URL",
+                      _authUrlController,
+                      _authUrlText),
                   Text(_authUrlResultText),
                 ]),
                 _card([
                   _title("\nQuestions or issues?"),
-                  _description("Read through our developer docs for more details on our embedded SDK or reach out to support."),
-                  _buttonGroup("View Developer Docs", _viewDeveloperDocs),
-                  _buttonGroup("Visit Support", _visitSupport),
+                  _description(
+                      "Read through our developer docs for more details on our embedded SDK or reach out to support."),
+                  _buttonGroup(null, "View Developer Docs", _viewDeveloperDocs),
+                  _buttonGroup(null, "Visit Support", _visitSupport),
                 ]),
               ],
             ),
@@ -839,18 +1078,20 @@ class _MyAppState extends State<MyApp> {
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
-        _paddingFromLTRB(
-          Text(
-            titleText,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
+        Flexible(
+          child: _paddingFromLTRB(
+            Text(
+              titleText,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+              ),
             ),
+            paddingLeft: paddingLeft,
+            paddingTop: paddingTop,
+            paddingRight: paddingRight,
+            paddingBottom: paddingBottom,
           ),
-          paddingLeft: paddingLeft,
-          paddingTop: paddingTop,
-          paddingRight: paddingRight,
-          paddingBottom: paddingBottom,
         ),
       ],
     );
@@ -915,6 +1156,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget _buttonGroup(
+    String? buttonKey,
     String buttonLabel,
     VoidCallback callback,
   ) {
@@ -922,17 +1164,19 @@ class _MyAppState extends State<MyApp> {
       mainAxisSize: MainAxisSize.max,
       children: [
         ElevatedButton(
-          child: Text(buttonLabel),
+          key: (buttonKey != null ? Key(buttonKey) : null),
           onPressed: callback,
           style: ElevatedButton.styleFrom(
             fixedSize: const Size.fromWidth(double.maxFinite),
           ),
+          child: Text(buttonLabel),
         ),
       ],
     );
   }
 
   Widget _buttonTextGroup(
+    String? key,
     String buttonLabel,
     VoidCallback callback,
     String text,
@@ -941,42 +1185,47 @@ class _MyAppState extends State<MyApp> {
       mainAxisSize: MainAxisSize.max,
       children: [
         ElevatedButton(
-          child: Text(buttonLabel),
+          key: (key != null ? Key(key) : null),
           onPressed: callback,
           style: ElevatedButton.styleFrom(
             fixedSize: const Size.fromWidth(double.maxFinite),
           ),
+          child: Text(buttonLabel),
         ),
-        SelectableText(text),
+        SelectableText(key: (key != null ? Key("$key Result") : null), text),
       ],
     );
   }
 
   Widget _buttonInputTextGroup(
+    String? key,
     String buttonLabel,
+    VoidCallback callback,
     String inputLabel,
     TextEditingController controller,
-    VoidCallback callback,
     String text,
   ) {
     return Column(
       mainAxisSize: MainAxisSize.max,
       children: [
         ElevatedButton(
-          child: Text(buttonLabel),
+          key: (key != null ? Key(key) : null),
           onPressed: callback,
           style: ElevatedButton.styleFrom(
             fixedSize: const Size.fromWidth(double.maxFinite),
           ),
+          child: Text(buttonLabel),
         ),
         TextFormField(
+          key: (key != null ? Key("$key Input") : null),
+          controller: controller,
           decoration: InputDecoration(
             border: const UnderlineInputBorder(),
             labelText: inputLabel,
           ),
-          controller: controller,
         ),
-        SelectableText("\n$text"),
+        SelectableText(
+            key: (key != null ? Key("$key Result") : null), "\n$text"),
       ],
     );
   }

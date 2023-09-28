@@ -14,7 +14,7 @@
 
 ### Embedded SDK
 
-Goodbye, passwords! The Beyond Identity SDK for Flutter is a wrapper around our Native Embedded SDKs ([Android](https://github.com/gobeyondidentity/bi-sdk-android) and [iOS](https://github.com/gobeyondidentity/bi-sdk-swift)), which allow you to embed the Passwordless experience into your product. Users will not need to download the Beyond Identity Authenticator. This SDK supports OIDC and OAuth2.
+Goodbye, passwords! The Beyond Identity SDK for Flutter is a wrapper around our native SDKs ([Android](https://github.com/gobeyondidentity/bi-sdk-android) and [iOS](https://github.com/gobeyondidentity/bi-sdk-swift)), which allow you to embed the Passwordless experience into your product. A set of functions are provided to you through the Embedded namespace. This SDK supports OIDC and OAuth 2.0.
 
 ## Installation
 
@@ -68,12 +68,21 @@ EmbeddedSdk.initialize(
 )
 ```
 
+For example:
+
+```dart
+EmbeddedSdk.initialize("Gimmie your biometrics", logger: EmbeddedSdk.enableLogger());
+```
+
 ## Example App
+
 To run the Android example app
+
 1. Run `flutter pub get` from the root of the repo
 2. Run `flutter run` from the example directory or use Android Studio. Make sure an Android device is running.
 
 To run the iOS example app
+
 1. Run `flutter pub get` from the root of the repo
 2. Run `pod install --repo-update` from `example/ios` directory
 3. Run `flutter run` from the example directory or use XCode.

@@ -8,11 +8,6 @@ class EmbeddedSdk {
   static const MethodChannel _channel =
       MethodChannel('embeddedsdk_method_channel');
 
-  static const EventChannel _eventChannel =
-      EventChannel('embeddedsdk_event_channel');
-  static Function(Map<String, String?>)? _eventCallback;
-  static StreamSubscription<dynamic>? _eventSubscription;
-
   /// Initialize and configure the Beyond Identity Embedded SDK.
   ///
   /// [allowedDomains] Optional array of domains that we whitelist against for network operations.
@@ -73,7 +68,52 @@ class EmbeddedSdk {
       return AuthenticateResponse(
         redirectUrl: authenticateResponse?["redirectUrl"],
         message: authenticateResponse?["message"],
+        passkeyBindingToken: authenticateResponse?["passkeyBindingToken"]
       );
+    } on Exception {
+      rethrow;
+    }
+  }
+
+  /// Initiates authentication using an OTP, which will be sent to the provided email address.
+  ///
+  /// [url] The authentication URL of the current transaction.
+  /// [email] The email address where the OTP will be sent.
+  /// Returns a [OtpChallengeResponse] or throws an [Exception]
+  static Future<OtpChallengeResponse> authenticateOtp(
+      String url, String email) async {
+    final Map<String, dynamic>? otpChallengeResponse =
+        await _channel.invokeMapMethod('authenticateOtp', {
+      'url': url,
+      'email': email,
+    });
+
+    try {
+      return OtpChallengeResponse(
+        url: otpChallengeResponse?["url"],
+      );
+    } on Exception {
+      rethrow;
+    }
+  }
+
+  /// Get the Authentication Context for the current transaction.
+  ///
+  /// The Authentication Context contains the Authenticator Config, Authentication Method Configuration, request origin, and the authenticating application.
+  /// This is used to retrieve authentication parameters for an ongoing transaction.
+  ///
+  /// [url] The authentication URL of the current transaction.
+  /// Returns a [AuthenticationContext] or throws an [Exception]
+  static Future<AuthenticationContext> getAuthenticationContext(
+      String url) async {
+    final Map<String, dynamic>? authContextResponse =
+        await _channel.invokeMapMethod('getAuthenticationContext', {
+      'url': url,
+    });
+
+    try {
+      return AuthenticationContext.mapToAuthenticationContext(
+          authContextResponse);
     } on Exception {
       rethrow;
     }
@@ -103,7 +143,7 @@ class EmbeddedSdk {
   }
 
   /// Delete a [Passkey] by ID on current device.
-  ///
+  /// Note: It is possible to delete a passkey that does not exist.
   /// Warning: deleting a [Passkey] is destructive and will remove everything
   /// from the device. If no other device contains the passkey then the user
   /// will need to complete a recovery in order to log in again on this device.
@@ -136,6 +176,61 @@ class EmbeddedSdk {
       rethrow;
     }
   }
+
+  /// Redeems an OTP for a grant code.
+  ///
+  /// Returns a promise that resolves to an [AuthenticateResponse] on success
+  /// or an [OtpChallengeResponse] on failure to authenticate with the provided OTP code.
+  /// Use the url provided in [OtpChallengeResponse] for retry.
+  ///
+  /// [url] The authentication URL of the current transaction.
+  /// [otp] The OTP to redeem..
+  /// Returns a [AuthenticateResponse] or [OtpChallengeResponse] or throws an [Exception]
+  static Future<RedeemOtpResponse> redeemOtp(String url, String otp) async {
+    final Map<String, dynamic>? redeemOtpResponse =
+        await _channel.invokeMapMethod('redeemOtp', {
+      'url': url,
+      'otp': otp,
+    });
+
+    try {
+      if (redeemOtpResponse != null) {
+        if (redeemOtpResponse.containsKey('redirectUrl')) {
+          return RedeemOtpResponse.success(AuthenticateResponse(
+            redirectUrl: redeemOtpResponse["redirectUrl"],
+            message: redeemOtpResponse["message"],
+            passkeyBindingToken: redeemOtpResponse["passkeyBindingToken"]
+          ));
+        } else if (redeemOtpResponse.containsKey('url')) {
+          return RedeemOtpResponse.failedOtp(OtpChallengeResponse(
+            url: redeemOtpResponse['url'],
+          ));
+        }
+      }
+      throw Exception(
+          'Invalid response from redeemOtp: Neither AuthenticateResponse nor OtpChallengeResponse found.');
+    } on Exception {
+      rethrow;
+    }
+  }
+}
+
+class RedeemOtpResponse {
+  final AuthenticateResponse? success;
+  final OtpChallengeResponse? failedOtp;
+
+  RedeemOtpResponse._({this.success, this.failedOtp});
+
+  bool get isSuccess => success != null;
+  bool get isFailedOtp => failedOtp != null;
+
+  factory RedeemOtpResponse.success(AuthenticateResponse response) {
+    return RedeemOtpResponse._(success: response);
+  }
+
+  factory RedeemOtpResponse.failedOtp(OtpChallengeResponse response) {
+    return RedeemOtpResponse._(failedOtp: response);
+  }
 }
 
 /// A response returned after successfully binding a passkey to a device.
@@ -144,7 +239,7 @@ class BindPasskeyResponse {
   Passkey passkey;
 
   /// A URI that can be redirected to once a passkey is bound. This could be a URI that automatically logs the user in with the newly bound passkey, or a success page indicating that a passkey has been bound.
-  String postBindingRedirectUri;
+  String? postBindingRedirectUri;
 
   BindPasskeyResponse({
     required this.passkey,
@@ -440,21 +535,154 @@ class AuthenticateResponse {
   String redirectUrl;
 
   /// An optional displayable message defined by policy returned by the cloud on success
-  String message;
+  String? message;
+
+  /// An optional one-time-token returned from successful `redeemOtp` that may be redeemed for a credential_binding_link from the /credential-binding-jobs endpoint.
+  String? passkeyBindingToken;
 
   AuthenticateResponse({
     required this.redirectUrl,
     required this.message,
+    required this.passkeyBindingToken
   });
 
   String toJson() {
     return "{"
         "\"redirectUrl\":\"$redirectUrl\","
-        "\"message\":\"$message\"}";
+        "\"message\":\"$message\","
+        "\"passkeyBindingToken\":\"$passkeyBindingToken\"}";
   }
 
   @override
   String toString() {
     return "{\"AuthenticateResponse\":${toJson()}}";
+  }
+}
+
+/// Information associated with the current authentication request.
+///
+/// Note that the `authUrl` field may differ from the URL passed into
+/// `getAuthenticationContext`. In this event, the new `authUrl` must be
+/// passed into `authenticate` or `authenticateOtp`, rather than the
+/// original URL.
+class AuthenticationContext {
+  /// A URL containing the state of the current authentication transaction.
+  String authUrl;
+
+  /// The authenticating application information
+  AuthenticationContextApplication application;
+
+  /// The authenticating request origin information
+  AuthenticationContextOrigin origin;
+
+  AuthenticationContext({
+    required this.authUrl,
+    required this.application,
+    required this.origin,
+  });
+
+  static AuthenticationContext mapToAuthenticationContext(dynamic authContext) {
+    return AuthenticationContext(
+        authUrl: authContext["authUrl"],
+        application: AuthenticationContextApplication.mapToApplication(
+            authContext["application"]),
+        origin: AuthenticationContextOrigin.mapToOrigin(authContext["origin"]));
+  }
+
+  String toJson() {
+    return "{"
+        "\"authUrl\":\"$authUrl\","
+        "\"application\":\"$application\","
+        "\"origin\":\"$origin\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"AuthenticationContext\":${toJson()}}";
+  }
+}
+
+class AuthenticationContextApplication {
+  String id;
+  String? displayName;
+
+  AuthenticationContextApplication({
+    required this.id,
+    this.displayName,
+  });
+
+  static AuthenticationContextApplication mapToApplication(
+      dynamic application) {
+    return AuthenticationContextApplication(
+      id: application["id"],
+      displayName: application["displayName"],
+    );
+  }
+
+  String toJson() {
+    return "{"
+        "\"id\":\"$id\","
+        "\"displayName\":\"$displayName\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"Application\":${toJson()}}";
+  }
+}
+
+class AuthenticationContextOrigin {
+  String? sourceIp;
+  String? userAgent;
+  String? geolocation;
+  String? referer;
+
+  AuthenticationContextOrigin({
+    this.sourceIp,
+    this.userAgent,
+    this.geolocation,
+    this.referer,
+  });
+
+  static AuthenticationContextOrigin mapToOrigin(dynamic origin) {
+    return AuthenticationContextOrigin(
+      sourceIp: origin["sourceIp"],
+      userAgent: origin["userAgent"],
+      geolocation: origin["geolocation"],
+      referer: origin["referer"],
+    );
+  }
+
+  String toJson() {
+    return "{"
+        "\"sourceIp\":\"$sourceIp\","
+        "\"userAgent\":\"$userAgent\","
+        "\"geolocation\":\"$geolocation\","
+        "\"referer\":\"$referer\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"Origin\":${toJson()}}";
+  }
+}
+
+/// A response returned if the SDK requires an OTP.
+class OtpChallengeResponse {
+  /// A URL containing the state of the current authentication transaction.
+  /// This should be used in the next `redeemOtp` or `authenticateOtp` function.
+  String url;
+
+  OtpChallengeResponse({
+    required this.url,
+  });
+
+  String toJson() {
+    return "{" "\"url\":\"$url\"}";
+  }
+
+  @override
+  String toString() {
+    return "{\"OtpChallengeResponse\":${toJson()}}";
   }
 }

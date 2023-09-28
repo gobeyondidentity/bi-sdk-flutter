@@ -1,12 +1,14 @@
 PODS:
-  - BeyondIdentityCoreSDK (2.0.0)
-  - BeyondIdentityEmbedded (2.0.0):
-    - BeyondIdentityCoreSDK (= 2.0.0)
-  - bi_sdk_flutter (2.0.0):
-    - BeyondIdentityEmbedded (= 2.0.0)
+  - BeyondIdentityCoreSDK (2.0.1)
+  - BeyondIdentityEmbedded (2.0.1):
+    - BeyondIdentityCoreSDK (= 2.0.1)
+  - bi_sdk_flutter (2.0.1):
+    - BeyondIdentityEmbedded (= 2.0.1)
     - Flutter
   - Flutter (1.0.0)
   - flutter_web_auth (0.4.0):
+    - Flutter
+  - integration_test (0.0.1):
     - Flutter
   - uni_links (0.0.1):
     - Flutter
@@ -17,6 +19,7 @@ DEPENDENCIES:
   - bi_sdk_flutter (from `.symlinks/plugins/bi_sdk_flutter/ios`)
   - Flutter (from `Flutter`)
   - flutter_web_auth (from `.symlinks/plugins/flutter_web_auth/ios`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - uni_links (from `.symlinks/plugins/uni_links/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
@@ -32,20 +35,23 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_web_auth:
     :path: ".symlinks/plugins/flutter_web_auth/ios"
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
   uni_links:
     :path: ".symlinks/plugins/uni_links/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
-  BeyondIdentityCoreSDK: b284603308262ed2e9a313935ea68771d6e487d9
-  BeyondIdentityEmbedded: 5d6b4894b2861c28bead95faa12bbc5224982c33
-  bi_sdk_flutter: 61e177e1a65876469416b17e5151733a6acfd96a
-  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  BeyondIdentityCoreSDK: 55a5bdde52ec7d7414291c4c983a2f37b106e107
+  BeyondIdentityEmbedded: a7f44737d550fbcfecef7ad7fbaa2a9cf137beca
+  bi_sdk_flutter: db23c639484369da92b9f89a01068a8dde7b353a
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   flutter_web_auth: fd071763f61703882adbb2524f5cd5251883118c
+  integration_test: a1e7d09bd98eca2fc37aefd79d4f41ad37bdbbe5
   uni_links: d97da20c7701486ba192624d99bffaaffcfc298a
-  url_launcher_ios: ae1517e5e344f5544fb090b079e11f399dfbe4d2
+  url_launcher_ios: 08a3dfac5fb39e8759aeb0abbd5d9480f30fc8b4
 
 PODFILE CHECKSUM: 88d32833604b5b3259d5fd3ac38aab9e2c29299d
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.12.1

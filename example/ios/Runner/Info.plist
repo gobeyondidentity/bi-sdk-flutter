@@ -72,5 +72,7 @@
 	<string>$(XCCONFIG_APP_VERSION)</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 </dict>
 </plist>

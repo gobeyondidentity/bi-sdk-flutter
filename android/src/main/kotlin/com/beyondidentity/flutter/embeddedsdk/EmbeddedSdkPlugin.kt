@@ -12,7 +12,10 @@ import androidx.annotation.NonNull
 import com.beyondidentity.embedded.sdk.EmbeddedSdk
 import com.beyondidentity.embedded.sdk.models.AuthenticateResponse
 import com.beyondidentity.embedded.sdk.models.BindPasskeyResponse
+import com.beyondidentity.embedded.sdk.models.AuthenticationContext
 import com.beyondidentity.embedded.sdk.models.Passkey
+import com.beyondidentity.embedded.sdk.models.OtpChallengeResponse
+import com.beyondidentity.embedded.sdk.models.RedeemOtpResponse
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -135,6 +138,57 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
                         null
                     )
                 }
+                "authenticateOtp" -> {
+                    call.argument<String>("url")?.let { url ->
+                        EmbeddedSdk.authenticateOtp(
+                            url,
+                            call.argument<String>("email") ?: "",
+                        ) { authenticateResult ->
+                            authenticateResult.onSuccess { otpChallengeResponse ->
+                                result.success(
+                                    makeOtpChallengeResponseMap(
+                                        otpChallengeResponse
+                                    )
+                                )
+                            }
+                            authenticateResult.onFailure {
+                                result.error(
+                                    EMBEDDED_SDK_ERROR,
+                                    it.localizedMessage,
+                                    null
+                                )
+                            }
+                        }
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get authenticateOtp arguments",
+                        null
+                    )
+                }
+                "getAuthenticationContext" -> {
+                    call.argument<String>("url")?.let { url ->
+                        EmbeddedSdk.getAuthenticationContext(url) { authContextResult ->
+                            authContextResult.onSuccess { authContextResponse ->
+                                result.success(
+                                    makeAuthenticationContextResponseMap(
+                                        authContextResponse
+                                    )
+                                )
+                            }
+                            authContextResult.onFailure {
+                                result.error(
+                                    EMBEDDED_SDK_ERROR,
+                                    it.localizedMessage,
+                                    null
+                                )
+                            }
+                        }
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get getAuthenticationContext arguments",
+                        null
+                    )
+                }
                 "getPasskeys" -> {
                     EmbeddedSdk.getPasskeys { getPasskeysResult ->
                         getPasskeysResult.onSuccess { passkeys ->
@@ -190,6 +244,46 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
                         null
                     )
                 }
+                "redeemOtp" -> {
+                    call.argument<String>("url")?.let { url ->
+                        EmbeddedSdk.redeemOtp(
+                            url,
+                            call.argument<String>("otp") ?: "",
+                        ) { redeemResult ->
+                            redeemResult.onSuccess { redeemOtpResponse ->
+                                when (redeemOtpResponse) {
+                                    is RedeemOtpResponse.Success -> {
+                                        val authResponse = redeemOtpResponse.authenticateResponse
+                                        result.success(
+                                            makeAuthenticateMap(
+                                                authResponse
+                                            )
+                                        )
+                                    }
+                                    is RedeemOtpResponse.FailedOtp -> {
+                                        val otpChallengeResponse = redeemOtpResponse.otpChallengeResponse
+                                        result.success(
+                                            makeOtpChallengeResponseMap(
+                                                otpChallengeResponse
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                            redeemResult.onFailure {
+                                result.error(
+                                    EMBEDDED_SDK_ERROR,
+                                    it.localizedMessage,
+                                    null
+                                )
+                            }
+                        }
+                    } ?: result.error(
+                        EMBEDDED_SDK_ERROR,
+                        "Could not get redeemOtp arguments",
+                        null
+                    )
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -233,11 +327,30 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
     private fun makeAuthenticateMap(authenticateResponse: AuthenticateResponse) = mapOf(
         "redirectUrl" to authenticateResponse.redirectUrl,
         "message" to authenticateResponse.message,
+        "passkeyBindingToken" to authenticateResponse.passkeyBindingToken,
+    )
+
+    private fun makeOtpChallengeResponseMap(otpChallengeResponseMap: OtpChallengeResponse)= mapOf(
+        "url" to otpChallengeResponseMap.url,
     )
 
     private fun makeBindPasskeyMap(bindPasskeyResponse: BindPasskeyResponse) = mapOf(
         "passkey" to makePasskeyMap(bindPasskeyResponse.passkey),
         "postBindingRedirectUri" to bindPasskeyResponse.postBindingRedirectUri,
+    )
+
+    private fun makeAuthenticationContextResponseMap(authenticationContext: AuthenticationContext) = mapOf(
+        "authUrl" to authenticationContext.authUrl,
+        "application" to mapOf(
+            "id" to authenticationContext.application.id,
+            "displayName" to authenticationContext.application.displayName,
+        ),
+        "origin" to mapOf(
+            "sourceIp" to authenticationContext.origin.sourceIp,
+            "userAgent" to authenticationContext.origin.userAgent,
+            "geolocation" to authenticationContext.origin.geolocation,
+            "referer" to authenticationContext.origin.referer
+        ),
     )
 
     private fun makePasskeyMap(passkey: Passkey) = mapOf(
