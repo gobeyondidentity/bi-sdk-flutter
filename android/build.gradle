@@ -1,14 +1,14 @@
 group 'com.beyondidentity.flutter.embeddedsdk'
 
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    ext.kotlin_version = '2.1.20'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.13.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -29,7 +29,7 @@ apply plugin: 'kotlin-android'
 
 android {
     namespace "com.beyondidentity.flutter.embeddedsdk"
-    compileSdkVersion 33
+    compileSdkVersion 35
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
@@ -50,5 +50,5 @@ android {
 }
 
 dependencies {
-    implementation "com.beyondidentity.android.sdk:embedded:2.0.1"
+    implementation "com.beyondidentity.android.sdk:embedded:2.1.2"
 }

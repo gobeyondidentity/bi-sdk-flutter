@@ -265,6 +265,9 @@ class Passkey {
   /// The Globally unique ID of this passkey.
   String id;
 
+  /// The external (cloud) ID
+  String passkeyId;
+
   /// The time when this passkey was created locally. This could be different from "created" which is the time when this passkey was created on the server.
   String localCreated;
 
@@ -300,6 +303,7 @@ class Passkey {
 
   Passkey({
     required this.id,
+    required this.passkeyId,
     required this.localCreated,
     required this.localUpdated,
     required this.apiBaseUrl,
@@ -316,6 +320,7 @@ class Passkey {
   static Passkey mapToPasskey(dynamic passkey) {
     return Passkey(
       id: passkey["id"],
+      passkeyId: passkey["passkeyId"],
       localCreated: passkey["localCreated"],
       localUpdated: passkey["localUpdated"],
       apiBaseUrl: passkey["apiBaseUrl"],
@@ -333,6 +338,7 @@ class Passkey {
   String toJson() {
     return "{"
         "\"id\":\"$id\","
+        "\"passkeyId\":\"$passkeyId\","
         "\"localCreated\":\"$localCreated\","
         "\"localUpdated\":\"$localUpdated\","
         "\"apiBaseUrl\":\"$apiBaseUrl\","

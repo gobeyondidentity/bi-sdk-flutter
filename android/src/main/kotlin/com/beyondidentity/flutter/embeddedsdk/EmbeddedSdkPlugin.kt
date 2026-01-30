@@ -355,6 +355,7 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
 
     private fun makePasskeyMap(passkey: Passkey) = mapOf(
         "id" to passkey.id,
+        "passkeyId" to passkey.passkeyId,
         "localCreated" to passkey.localCreated.toString(),
         "localUpdated" to passkey.localUpdated.toString(),
         "apiBaseUrl" to passkey.apiBaseUrl.toString(),

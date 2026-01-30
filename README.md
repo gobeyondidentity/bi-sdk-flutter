@@ -43,11 +43,11 @@ buildscript {
 
 ### Update iOS
 
-Please make sure your project supports "minimum deployment target" 13.0 or later.
+Please make sure your project supports "minimum deployment target" 15.1 or later.
 In your `ios/Podfile` set:
 
 ```sh
-platform :ios, '13.0'
+platform :ios, '15.1'
 ```
 
 ## Usage

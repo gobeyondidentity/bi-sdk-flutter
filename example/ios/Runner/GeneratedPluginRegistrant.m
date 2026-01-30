@@ -12,10 +12,10 @@
 @import bi_sdk_flutter;
 #endif
 
-#if __has_include(<flutter_web_auth/FlutterWebAuthPlugin.h>)
-#import <flutter_web_auth/FlutterWebAuthPlugin.h>
+#if __has_include(<flutter_web_auth_2/FlutterWebAuth2Plugin.h>)
+#import <flutter_web_auth_2/FlutterWebAuth2Plugin.h>
 #else
-@import flutter_web_auth;
+@import flutter_web_auth_2;
 #endif
 
 #if __has_include(<integration_test/IntegrationTestPlugin.h>)
@@ -24,14 +24,8 @@
 @import integration_test;
 #endif
 
-#if __has_include(<uni_links/UniLinksPlugin.h>)
-#import <uni_links/UniLinksPlugin.h>
-#else
-@import uni_links;
-#endif
-
-#if __has_include(<url_launcher_ios/FLTURLLauncherPlugin.h>)
-#import <url_launcher_ios/FLTURLLauncherPlugin.h>
+#if __has_include(<url_launcher_ios/URLLauncherPlugin.h>)
+#import <url_launcher_ios/URLLauncherPlugin.h>
 #else
 @import url_launcher_ios;
 #endif
@@ -40,10 +34,9 @@
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [EmbeddedSdkPlugin registerWithRegistrar:[registry registrarForPlugin:@"EmbeddedSdkPlugin"]];
-  [FlutterWebAuthPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterWebAuthPlugin"]];
+  [FlutterWebAuth2Plugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterWebAuth2Plugin"]];
   [IntegrationTestPlugin registerWithRegistrar:[registry registrarForPlugin:@"IntegrationTestPlugin"]];
-  [UniLinksPlugin registerWithRegistrar:[registry registrarForPlugin:@"UniLinksPlugin"]];
-  [FLTURLLauncherPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTURLLauncherPlugin"]];
+  [URLLauncherPlugin registerWithRegistrar:[registry registrarForPlugin:@"URLLauncherPlugin"]];
 }
 
 @end

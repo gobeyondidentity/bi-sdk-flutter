@@ -8,7 +8,7 @@ import 'package:embeddedsdk_example/extensions.dart';
 import 'package:embeddedsdk_example/simple_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_web_auth/flutter_web_auth.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_interceptor/http_interceptor.dart';
 import 'package:pkce/pkce.dart';
@@ -510,7 +510,7 @@ class _MyAppState extends State<MyApp> {
         final pkcePair = PkcePair.generate();
 
         // Present the dialog to the user
-        var oktaResult = await FlutterWebAuth.authenticate(
+        var oktaResult = await FlutterWebAuth2.authenticate(
           url: "https://dev-43409302.okta.com/oauth2/v1/authorize"
               "?idp=0oa5rswruxTaPUcgl5d7"
               "&scope=openid"
@@ -582,7 +582,7 @@ class _MyAppState extends State<MyApp> {
         final pkcePair = PkcePair.generate();
 
         // Present the dialog to the user
-        var auth0Result = await FlutterWebAuth.authenticate(
+        var auth0Result = await FlutterWebAuth2.authenticate(
           url: "https://dev-pt10fbkg.us.auth0.com/authorize"
               "?connection=Example-App-Native"
               "&scope=openid"
@@ -668,7 +668,7 @@ class _MyAppState extends State<MyApp> {
 
         // Present the dialog to the user
         if (shouldReturnNonRedirectUrl) {
-          onRedirectResponse(await FlutterWebAuth.authenticate(
+          onRedirectResponse(await FlutterWebAuth2.authenticate(
             url: authenticateResponse.redirectUrl,
             callbackUrlScheme: "acme",
           ));
@@ -903,6 +903,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        useMaterial3: false,
+      ),
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Embedded SDK example app'),

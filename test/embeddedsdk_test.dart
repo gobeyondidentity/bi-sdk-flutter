@@ -34,6 +34,7 @@ void main() {
   test('getPasskeys', () async {
     List<Passkey> passkeys = await EmbeddedSdk.getPasskeys();
     expect(passkeys[0].id, "01234567-89AB-CDEF-0123-456789ABCDEF");
+    expect(passkeys[0].passkeyId, "0123456789ABCDEF");
     expect(passkeys[0].localCreated, "2022-06-15T12:00:00");
     expect(passkeys[0].localUpdated, "2022-06-15T12:00:00");
     expect(passkeys[0].apiBaseUrl, "https://auth-us.beyondidentity.com");
@@ -49,8 +50,8 @@ void main() {
     expect(passkeys[0].identity.displayName, "Beyond Identity");
     expect(passkeys[0].identity.username, "Beyond Identity");
     expect(passkeys[0].identity.primaryEmailAddress, "foo.bar@beyondidentity.com");
-    expect(passkeys[0].theme.logoLightUrl, "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png");
-    expect(passkeys[0].theme.logoDarkUrl, "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png");
+    expect(passkeys[0].theme.logoLightUrl, "https://static.byndid.com/logos/beyondidentity.png");
+    expect(passkeys[0].theme.logoDarkUrl, "https://static.byndid.com/logos/beyondidentity.png");
     expect(passkeys[0].theme.supportUrl, "https://www.beyondidentity.com/support");
   });
 
@@ -82,6 +83,7 @@ void main() {
 Map<String, dynamic> createPasskey() {
   return {
     "id": "01234567-89AB-CDEF-0123-456789ABCDEF",
+    "passkeyId": "0123456789ABCDEF",
     "localCreated": "2022-06-15T12:00:00",
     "localUpdated": "2022-06-15T12:00:00",
     "apiBaseUrl": "https://auth-us.beyondidentity.com",
@@ -104,8 +106,8 @@ Map<String, dynamic> createPasskey() {
       "primaryEmailAddress": "foo.bar@beyondidentity.com",
     },
     "theme": {
-      "logoLightUrl": "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png",
-      "logoDarkUrl": "https://byndid-public-assets.s3-us-west-2.amazonaws.com/logos/beyondidentity.png",
+      "logoLightUrl": "https://static.byndid.com/logos/beyondidentity.png",
+      "logoDarkUrl": "https://static.byndid.com/logos/beyondidentity.png",
       "supportUrl": "https://www.beyondidentity.com/support",
     },
   };
