@@ -11,46 +11,47 @@
   
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
   
   <link rel="stylesheet" href="../static-assets/github.css?v1">
   <link rel="stylesheet" href="../static-assets/styles.css?v1">
   <link rel="icon" href="../static-assets/favicon.png?v1">
-
   
 </head>
 
-
 <body data-base-href="../" data-using-base-href="false" class="light-theme">
-
 <div id="overlay-under-drawer"></div>
-
 <header id="title">
   <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
   <ol class="breadcrumbs gt-separated dark hidden-xs">
     <li><a href="../index.html">bi_sdk_flutter</a></li>
-    <li><a href="../embeddedsdk/embeddedsdk-library.html">embeddedsdk</a></li>
+    <li><a href="../embeddedsdk/embeddedsdk-library.html">embeddedsdk.dart</a></li>
     <li class="self-crumb">EmbeddedSdk class</li>
   </ol>
   <div class="self-name">EmbeddedSdk</div>
   <form class="search navbar-right" role="search">
     <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
-  <div class="toggle" id="theme-button">
+  <div class="toggle" id="theme-button" title="Toggle brightness">
     <label for="theme">
       <input type="checkbox" id="theme" value="light-theme">
-      <span class="material-symbols-outlined">
-        brightness_4
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
       </span>
     </label>
   </div>
 </header>
 <main>
-
-  <div id="dartdoc-main-content" class="main-content">
-      <div>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="embeddedsdk&#47;embeddedsdk-library-sidebar.html"
+    data-below-sidebar="embeddedsdk&#47;EmbeddedSdk-class-sidebar.html">
+    <div>
 <h1><span class="kind-class">EmbeddedSdk</span> class 
-    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
  
 </h1></div>
 
@@ -61,7 +62,6 @@
     
   <section class="summary offset-anchor" id="constructors">
     <h2>Constructors</h2>
-
     <dl class="constructor-summary-list">
         <dt id="EmbeddedSdk" class="callable">
           <span class="name"><a href="../embeddedsdk/EmbeddedSdk/EmbeddedSdk.html">EmbeddedSdk</a></span><span class="signature">()</span>
@@ -71,35 +71,38 @@
         </dd>
     </dl>
   </section>
-
-    <section class="summary offset-anchor inherited" id="instance-properties">
-      <h2>Properties</h2>
-
-      <dl class="properties">
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
         <dt id="hashCode" class="property inherited">
   <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></span>
-  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span> 
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/int-class.html">int</a></span>
+  
 
 </dt>
 <dd class="inherited">
   The hash code for this object.
-  <div class="features"><span class="feature">read-only</span><span class="feature">inherited</span></div>
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
 
 </dd>
 
         <dt id="runtimeType" class="property inherited">
   <span class="name"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></span>
-  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span> 
+  <span class="signature">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Type-class.html">Type</a></span>
+  
 
 </dt>
 <dd class="inherited">
   A representation of the runtime type of the object.
-  <div class="features"><span class="feature">read-only</span><span class="feature">inherited</span></div>
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
 
 </dd>
 
-      </dl>
-    </section>
+    </dl>
+  </section>
 
     
   <section
@@ -115,7 +118,7 @@
 
 </dt>
 <dd class="inherited">
-  Invoked when a non-existent method or property is accessed.
+  Invoked when a nonexistent method or property is accessed.
   <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
@@ -163,7 +166,7 @@
     <dl class="callables">
         <dt id="authenticate" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/authenticate.html">authenticate</a></span><span class="signature">(<wbr><span class="parameter" id="authenticate-param-url"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">url</span>, </span><span class="parameter" id="authenticate-param-passkeyId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">passkeyId</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/AuthenticateResponse-class.html">AuthenticateResponse</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/AuthenticateResponse-class.html">AuthenticateResponse</a></span>&gt;</span></span>
   </span>
   
 
@@ -176,7 +179,7 @@
 
         <dt id="authenticateOtp" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/authenticateOtp.html">authenticateOtp</a></span><span class="signature">(<wbr><span class="parameter" id="authenticateOtp-param-url"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">url</span>, </span><span class="parameter" id="authenticateOtp-param-email"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">email</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/OtpChallengeResponse-class.html">OtpChallengeResponse</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/OtpChallengeResponse-class.html">OtpChallengeResponse</a></span>&gt;</span></span>
   </span>
   
 
@@ -189,7 +192,7 @@
 
         <dt id="bindPasskey" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/bindPasskey.html">bindPasskey</a></span><span class="signature">(<wbr><span class="parameter" id="bindPasskey-param-url"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">url</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/BindPasskeyResponse-class.html">BindPasskeyResponse</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/BindPasskeyResponse-class.html">BindPasskeyResponse</a></span>&gt;</span></span>
   </span>
   
 
@@ -202,7 +205,7 @@
 
         <dt id="deletePasskey" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/deletePasskey.html">deletePasskey</a></span><span class="signature">(<wbr><span class="parameter" id="deletePasskey-param-id"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">id</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
   </span>
   
 
@@ -219,7 +222,7 @@ will need to complete a recovery in order to log in again on this device.
 
         <dt id="enableLogger" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/enableLogger.html">enableLogger</a></span><span class="signature">(<wbr>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Function-class.html">Function</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Function-class.html">Function</a></span>&gt;</span></span>
   </span>
   
 
@@ -233,7 +236,7 @@ This must be called from within a <a href="https://api.flutter.dev/flutter/widge
 
         <dt id="getAuthenticationContext" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/getAuthenticationContext.html">getAuthenticationContext</a></span><span class="signature">(<wbr><span class="parameter" id="getAuthenticationContext-param-url"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">url</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/AuthenticationContext-class.html">AuthenticationContext</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/AuthenticationContext-class.html">AuthenticationContext</a></span>&gt;</span></span>
   </span>
   
 
@@ -246,7 +249,7 @@ This must be called from within a <a href="https://api.flutter.dev/flutter/widge
 
         <dt id="getPasskeys" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/getPasskeys.html">getPasskeys</a></span><span class="signature">(<wbr>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/Passkey-class.html">Passkey</a></span>&gt;</span></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/Passkey-class.html">Passkey</a></span>&gt;</span></span>&gt;</span></span>
   </span>
   
 
@@ -258,8 +261,8 @@ This must be called from within a <a href="https://api.flutter.dev/flutter/widge
 </dd>
 
         <dt id="initialize" class="callable">
-  <span class="name"><a href="../embeddedsdk/EmbeddedSdk/initialize.html">initialize</a></span><span class="signature">(<wbr><span class="parameter" id="initialize-param-biometricAskPrompt"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">biometricAskPrompt</span>, </span><span class="parameter" id="initialize-param-allowedDomains">{<span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">allowedDomains</span> = <span class="default-value">const &lt;String&gt;[]</span>, </span><span class="parameter" id="initialize-param-logger"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Function-class.html">Function</a></span>&gt;</span>?</span> <span class="parameter-name">logger</span>}</span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  <span class="name"><a href="../embeddedsdk/EmbeddedSdk/initialize.html">initialize</a></span><span class="signature">(<wbr><span class="parameter" id="initialize-param-biometricAskPrompt"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">biometricAskPrompt</span>, {</span><span class="parameter" id="initialize-param-allowedDomains"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span>?</span> <span class="parameter-name">allowedDomains</span> = <span class="default-value">const &lt;String&gt;[]</span>, </span><span class="parameter" id="initialize-param-logger"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Function-class.html">Function</a></span>&gt;</span>?</span> <span class="parameter-name">logger</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
   </span>
   
 
@@ -272,7 +275,7 @@ This must be called from within a <a href="https://api.flutter.dev/flutter/widge
 
         <dt id="isAuthenticateUrl" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/isAuthenticateUrl.html">isAuthenticateUrl</a></span><span class="signature">(<wbr><span class="parameter" id="isAuthenticateUrl-param-url"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">url</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
   </span>
   
 
@@ -285,7 +288,7 @@ This must be called from within a <a href="https://api.flutter.dev/flutter/widge
 
         <dt id="isBindPasskeyUrl" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/isBindPasskeyUrl.html">isBindPasskeyUrl</a></span><span class="signature">(<wbr><span class="parameter" id="isBindPasskeyUrl-param-url"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">url</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
   </span>
   
 
@@ -298,7 +301,7 @@ This must be called from within a <a href="https://api.flutter.dev/flutter/widge
 
         <dt id="redeemOtp" class="callable">
   <span class="name"><a href="../embeddedsdk/EmbeddedSdk/redeemOtp.html">redeemOtp</a></span><span class="signature">(<wbr><span class="parameter" id="redeemOtp-param-url"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">url</span>, </span><span class="parameter" id="redeemOtp-param-otp"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">otp</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/RedeemOtpResponse-class.html">RedeemOtpResponse</a></span>&gt;</span></span>
+    <span class="returntype parameter">&#8594; <a href="https://api.flutter.dev/flutter/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../embeddedsdk/RedeemOtpResponse-class.html">RedeemOtpResponse</a></span>&gt;</span></span>
   </span>
   
 
@@ -313,112 +316,38 @@ This must be called from within a <a href="https://api.flutter.dev/flutter/widge
   </section>
     
 
-
   </div> <!-- /.main-content -->
-
   <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
-    <header id="header-search-sidebar" class="hidden-l">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
   <form class="search-sidebar" role="search">
     <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
   </form>
 </header>
-
 <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
-  <li><a href="../index.html">bi_sdk_flutter</a></li>
-  <li><a href="../embeddedsdk/embeddedsdk-library.html">embeddedsdk</a></li>
-  <li class="self-crumb">EmbeddedSdk class</li>
+    <li><a href="../index.html">bi_sdk_flutter</a></li>
+    <li><a href="../embeddedsdk/embeddedsdk-library.html">embeddedsdk</a></li>
+    <li class="self-crumb">EmbeddedSdk class</li>
 </ol>
-
 
     <h5>embeddedsdk library</h5>
-    <ol>
-      <li class="section-title"><a href="../embeddedsdk/embeddedsdk-library.html#classes">Classes</a></li>
-        <li><a href="../embeddedsdk/AuthenticateResponse-class.html">AuthenticateResponse</a></li>
-        <li><a href="../embeddedsdk/AuthenticationContext-class.html">AuthenticationContext</a></li>
-        <li><a href="../embeddedsdk/AuthenticationContextApplication-class.html">AuthenticationContextApplication</a></li>
-        <li><a href="../embeddedsdk/AuthenticationContextOrigin-class.html">AuthenticationContextOrigin</a></li>
-        <li><a href="../embeddedsdk/BindPasskeyResponse-class.html">BindPasskeyResponse</a></li>
-        <li><a href="../embeddedsdk/EmbeddedSdk-class.html">EmbeddedSdk</a></li>
-        <li><a href="../embeddedsdk/OtpChallengeResponse-class.html">OtpChallengeResponse</a></li>
-        <li><a href="../embeddedsdk/Passkey-class.html">Passkey</a></li>
-        <li><a href="../embeddedsdk/PasskeyIdentity-class.html">PasskeyIdentity</a></li>
-        <li><a href="../embeddedsdk/PasskeyRealm-class.html">PasskeyRealm</a></li>
-        <li><a href="../embeddedsdk/PasskeyStateHelper-class.html">PasskeyStateHelper</a></li>
-        <li><a href="../embeddedsdk/PasskeyTenant-class.html">PasskeyTenant</a></li>
-        <li><a href="../embeddedsdk/PasskeyTheme-class.html">PasskeyTheme</a></li>
-        <li><a href="../embeddedsdk/RedeemOtpResponse-class.html">RedeemOtpResponse</a></li>
-
-
-
-
-
-
-      <li class="section-title"><a href="../embeddedsdk/embeddedsdk-library.html#enums">Enums</a></li>
-        <li><a href="../embeddedsdk/PasskeyState.html">PasskeyState</a></li>
-
-
-</ol>
-
+    <div id="dartdoc-sidebar-left-content"></div>
   </div>
-
   <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
-    <ol>
-
-        <li class="section-title"><a href="../embeddedsdk/EmbeddedSdk-class.html#constructors">Constructors</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/EmbeddedSdk.html">EmbeddedSdk</a></li>
-
-
-        <li class="section-title inherited">
-          <a href="../embeddedsdk/EmbeddedSdk-class.html#instance-properties">Properties</a>
-        </li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/hashCode.html">hashCode</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html">runtimeType</a></li>
-
-        <li class="section-title inherited"><a href="../embeddedsdk/EmbeddedSdk-class.html#instance-methods">Methods</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/toString.html">toString</a></li>
-
-        <li class="section-title inherited"><a href="../embeddedsdk/EmbeddedSdk-class.html#operators">Operators</a></li>
-          <li class="inherited"><a href="https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html">operator ==</a></li>
-
-
-
-        <li class="section-title"><a href="../embeddedsdk/EmbeddedSdk-class.html#static-methods">Static methods</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/authenticate.html">authenticate</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/authenticateOtp.html">authenticateOtp</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/bindPasskey.html">bindPasskey</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/deletePasskey.html">deletePasskey</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/enableLogger.html">enableLogger</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/getAuthenticationContext.html">getAuthenticationContext</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/getPasskeys.html">getPasskeys</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/initialize.html">initialize</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/isAuthenticateUrl.html">isAuthenticateUrl</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/isBindPasskeyUrl.html">isBindPasskeyUrl</a></li>
-          <li><a href="../embeddedsdk/EmbeddedSdk/redeemOtp.html">redeemOtp</a></li>
-
-</ol>
-
   </div><!--/.sidebar-offcanvas-->
-
 </main>
-
 <footer>
   <span class="no-break">
     bi_sdk_flutter
-      2.0.1
+      2.0.2
   </span>
-
   
 </footer>
-
 
 
 <script src="../static-assets/highlight.pack.js?v1"></script>
 <script src="../static-assets/docs.dart.js"></script>
 
-
-
 </body>
-
 </html>
 
