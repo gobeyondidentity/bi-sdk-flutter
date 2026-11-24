@@ -1,24 +1,18 @@
 PODS:
-  - BeyondIdentityCoreSDK (2.1.1)
-  - BeyondIdentityEmbedded (2.1.1):
-    - BeyondIdentityCoreSDK (= 2.1.1)
-  - bi_sdk_flutter (2.0.2):
-    - BeyondIdentityEmbedded (= 2.1.1)
+  - BeyondIdentityCoreSDK (2.2.0)
+  - BeyondIdentityEmbedded (2.2.0):
+    - BeyondIdentityCoreSDK (= 2.2.0)
+  - bi_sdk_flutter (2.2.0):
+    - BeyondIdentityEmbedded (= 2.2.0)
     - Flutter
   - Flutter (1.0.0)
   - flutter_web_auth_2 (3.0.0):
-    - Flutter
-  - integration_test (0.0.1):
-    - Flutter
-  - url_launcher_ios (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - bi_sdk_flutter (from `.symlinks/plugins/bi_sdk_flutter/ios`)
   - Flutter (from `Flutter`)
   - flutter_web_auth_2 (from `.symlinks/plugins/flutter_web_auth_2/ios`)
-  - integration_test (from `.symlinks/plugins/integration_test/ios`)
-  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
@@ -32,20 +26,14 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_web_auth_2:
     :path: ".symlinks/plugins/flutter_web_auth_2/ios"
-  integration_test:
-    :path: ".symlinks/plugins/integration_test/ios"
-  url_launcher_ios:
-    :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
-  BeyondIdentityCoreSDK: 37f6e1645377be6649996a2641f96ecfb28141be
-  BeyondIdentityEmbedded: 4babfb79f9f11c36e4a1af8525d5af8406dd0942
-  bi_sdk_flutter: d4cf6ceb09f408cd92e38852ba280d22d8c9ca96
+  BeyondIdentityCoreSDK: d7dd7944f7dacc3f5b568aa0ffdff89398cc0c5f
+  BeyondIdentityEmbedded: 1c9df9a5cd792ba446eaa877a1ca454340654f7f
+  bi_sdk_flutter: 92ed7c583734da48f800eeb6e782aa1e73b09c86
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_web_auth_2: 5c8d9dcd7848b5a9efb086d24e7a9adcae979c80
-  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
 
-PODFILE CHECKSUM: 88d32833604b5b3259d5fd3ac38aab9e2c29299d
+PODFILE CHECKSUM: cdec7b826f6a7a4351cdee0eb17dd464336e72a2
 
 COCOAPODS: 1.16.2

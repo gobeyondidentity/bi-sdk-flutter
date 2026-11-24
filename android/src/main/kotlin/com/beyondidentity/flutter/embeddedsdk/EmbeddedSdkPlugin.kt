@@ -2,9 +2,6 @@ package com.beyondidentity.flutter.embeddedsdk
 
 import android.app.Activity
 import android.app.Application
-import android.app.KeyguardManager
-import android.content.Context
-import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -28,8 +25,7 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 
 /** EmbeddedSdkPlugin */
-class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
-    PluginRegistry.ActivityResultListener {
+class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -37,24 +33,39 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
     private lateinit var channel: MethodChannel
     private var isEmbeddedSdkInitialized = false
 
-    private var keyguardPrompt: (((Boolean, Exception) -> Unit) -> Unit)? = null
     private var currentActivity: Activity? = null
     private var logger: (String) -> Unit = { }
 
+    /// ActivityAware
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        currentActivity = binding.activity
+    }
+
+    override fun onDetachedFromActivity() {
+
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+
+    }
+
+    /// FlutterEngine
     @Suppress("UNCHECKED_CAST")
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, EMBEDDED_METHOD_CHANNEL)
         channel.setMethodCallHandler(this)
-
-        keyguardPrompt = { answer ->
-            (flutterPluginBinding.applicationContext.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager)
-                ?.createConfirmDeviceCredentialIntent("Check", "Enter your pin or password")
-                ?.let { intent ->
-                    currentActivity?.startActivityForResult(intent, EMBEDDED_KEYGUARD_REQUEST)
-                } ?: answer(false, IllegalStateException("Can not authenticate with KeyGuard!"))
-        }
     }
 
+    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+        channel.setMethodCallHandler(null)
+    }
+    /// FlutterEngine
+
+    /// MethodCallHandler
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         if (!isEmbeddedSdkInitialized && call.method != "initialize") {
             result.error(EMBEDDED_SDK_ERROR, "EmbeddedSdk not initialized", null)
@@ -79,11 +90,11 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
                     checkNulls(app, biometricAskPrompt)?.let { (app, biometricAskPrompt) ->
                         EmbeddedSdk.init(
                             app = app as Application,
-                            keyguardPrompt = keyguardPrompt,
-                            logger = this.logger,
                             biometricAskPrompt = biometricAskPrompt as String,
+                            logger = this.logger,
                             allowedDomains = allowedDomains,
                         )
+                        currentActivity?.let { EmbeddedSdk.setActivity(it) }
                         isEmbeddedSdkInitialized = true
                     } ?: result.error(EMBEDDED_SDK_ERROR, "Failed to initialize EmbeddedSdk", null)
                 }
@@ -290,39 +301,7 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
             }
         }
     }
-
-    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-        channel.setMethodCallHandler(null)
-    }
-
-    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        currentActivity = binding.activity
-        binding.addActivityResultListener(this)
-    }
-
-    override fun onDetachedFromActivityForConfigChanges() {
-
-    }
-
-    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        binding.removeActivityResultListener(this)
-    }
-
-    override fun onDetachedFromActivity() {
-
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (requestCode == EMBEDDED_KEYGUARD_REQUEST) {
-            if (resultCode == Activity.RESULT_OK) {
-                EmbeddedSdk.answer(true)
-            } else {
-                EmbeddedSdk.answer(false)
-            }
-        }
-
-        return true
-    }
+    /// MethodCallHandler
 
     private fun makeAuthenticateMap(authenticateResponse: AuthenticateResponse) = mapOf(
         "redirectUrl" to authenticateResponse.redirectUrl,
@@ -330,7 +309,7 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
         "passkeyBindingToken" to authenticateResponse.passkeyBindingToken,
     )
 
-    private fun makeOtpChallengeResponseMap(otpChallengeResponseMap: OtpChallengeResponse)= mapOf(
+    private fun makeOtpChallengeResponseMap(otpChallengeResponseMap: OtpChallengeResponse) = mapOf(
         "url" to otpChallengeResponseMap.url,
     )
 
@@ -385,8 +364,6 @@ class EmbeddedSdkPlugin : ActivityAware, FlutterPlugin, MethodCallHandler,
     )
 
     companion object {
-        const val EMBEDDED_KEYGUARD_REQUEST = 4936
-
         const val EMBEDDED_METHOD_CHANNEL = "embeddedsdk_method_channel"
         const val EMBEDDED_EVENT_CHANNEL = "embeddedsdk_event_channel"
 

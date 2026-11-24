@@ -41,6 +41,8 @@ buildscript {
 }
 ```
 
+**Important:** For biometric authentication to work on Android, your Activity must extend `FragmentActivity` (e.g., `FlutterFragmentActivity`). This is required because Android's `BiometricPrompt` API requires a `FragmentActivity` to display the biometric dialog.
+
 ### Update iOS
 
 Please make sure your project supports "minimum deployment target" 15.1 or later.

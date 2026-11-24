@@ -2,10 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSFaceIDUsageDescription</key>
-  	<string>This app uses Face ID to securely authenticate users and provide personalized experiences.</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -37,9 +35,36 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(XCCONFIG_APP_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app uses Face ID to securely authenticate users and provide personalized experiences.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -64,17 +89,13 @@
 	<array>
 		<dict/>
 	</array>
-	<key>XCCONFIG_APP_SCHEME</key>
-	<string>$(XCCONFIG_APP_SCHEME)</string>
-	<key>XCCONFIG_PRODUCT_BUNDLE_IDENTIFIER</key>
-	<string>$(XCCONFIG_PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>XCCONFIG_APP_BUILD_NUMBER</key>
 	<string>$(XCCONFIG_APP_BUILD_NUMBER)</string>
+	<key>XCCONFIG_APP_SCHEME</key>
+	<string>$(XCCONFIG_APP_SCHEME)</string>
 	<key>XCCONFIG_APP_VERSION</key>
 	<string>$(XCCONFIG_APP_VERSION)</string>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+	<key>XCCONFIG_PRODUCT_BUNDLE_IDENTIFIER</key>
+	<string>$(XCCONFIG_PRODUCT_BUNDLE_IDENTIFIER)</string>
 </dict>
 </plist>
